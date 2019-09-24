@@ -1,0 +1,11 @@
+#%Module1.0
+##
+## Test of overriding the default version
+##
+## Here we assume the version numbering system was rebooted
+## so version 7.0 is older than version 1.1, and we want
+## the latest version to be the default
+
+module-version defver-test1/1.1 default
+
+

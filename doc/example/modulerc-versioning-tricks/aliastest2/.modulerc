@@ -1,0 +1,19 @@
+#%Module1.0
+##
+## Test of setting aliases
+
+# Alias test uses really long version numbers, so
+# we want to allow users to abbreviate
+
+# This version is for module version 3.x, where module-alias
+# command does not appear to work
+# so we use module-version instead
+#
+# If we do not wrap the module-version command in a conditional,
+# module alias will report 'Duplicate version symbol' errors
+
+if ![info exists _ALIASTEST2_ALIAS_10] {
+   set _ALIASTEST2_ALIAS_10 1
+   module-version aliastest2/1.0-really-long-version-number 1.0
+}
+
