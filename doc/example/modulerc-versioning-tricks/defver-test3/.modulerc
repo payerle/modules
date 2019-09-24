@@ -1,0 +1,83 @@
+#%Module1.0
+##
+## Test of overriding the default version
+##
+## Here we assume the version numbering system was rebooted
+## so version 7.0 is older than versions 1.1 and 1.2, and we want
+## the latest version to be the default
+## But we don't want to need to remember to update the .modulerc
+## file each time a new module is added; so instead we just
+## default to the latest version found (using the standard 
+## dictionary sort) excluding version 7.0
+
+## We define a Tcl procedure to return the most recent version
+## of modulefiles in the current directory excluding any version
+## in excludeList
+
+proc GetLatestVersionExcept { excludeList } {
+  global ModulesCurrentModulefile
+  # Get the directory that this .modulerc file is in
+  set moduledir [file dirname $ModulesCurrentModulefile ]
+
+  # Get all files underneath this directory 
+  # (will return fully qualified paths) 
+  set fqchildren [ glob -directory $moduledir * ]
+  # Convert to unqualified names in children
+  set children {}
+  foreach child $fqchildren {
+    set tmp [file tail $child]
+    lappend children $tmp
+  }
+
+  # Now sort; we use lsort with -dictionary flag to mimic 
+  # standard Environmental modules sorting
+  # Sort with -decreasing so larger version numbers first
+  set sorted [ lsort -dictionary -decreasing $children ]
+
+  # Now we look for first child not in our excluded list
+  foreach child $sorted {
+    set excluded 0
+    foreach excl $excludeList {
+      if { $child eq $excl } {
+        set excluded 1
+        break
+      }
+    }
+    if !$excluded { return $child }
+  }
+
+  # No children not in excluded list, return empty string
+  return
+}
+
+# And a Tcl procedure to return the first child modulefile
+# found in the list
+
+proc GetFirstChildInList { childList } {
+  global ModulesCurrentModulefile
+  # Get the directory that this .modulerc file is in
+  set moduledir [file dirname $ModulesCurrentModulefile ]
+
+  # Loop over all children in childList
+  foreach child $childList {
+    # See if child exists in $moduledir, and if so return it
+    if [ file exists $moduledir/$child ] { return $child }
+  }
+
+  # Nothing found, 
+  return
+}
+
+# See if any of 'current', 'latest', or 'newest' found
+set latest [GetFirstChildInList {current latest newest}]
+if { $latest ne {} } {
+  module-version defver-test2/$latest default
+} else {
+  # Get latest version excluding version 7.0
+  set latest [GetLatestVersionExcept 7.0 ]
+  # Default to latest version excluding 7.0 if exists
+  if { $latest ne {} } {
+    module-version defver-test2/$latest default
+  }
+}
+

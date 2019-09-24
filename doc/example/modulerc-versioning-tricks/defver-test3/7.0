@@ -1,0 +1,25 @@
+#%Module1.0
+##
+## defver-test3
+
+set version 7.0
+proc ModulesHelp { } {
+   global version
+   puts stderr "
+Defver-test3: This is a test of overriding default versioning
+Version $version
+
+This is a dummy modulefile showing how one can override
+the default versioning.
+
+Here we assume the package authors rebooted the version numbering
+system, so version 1.1 is newer than version 7.0
+
+
+"
+}
+module-whatis "defver-test3: version $version"
+
+conflict defver-test3
+prepend-path PATH /software/defver-test3/$version/bin
+

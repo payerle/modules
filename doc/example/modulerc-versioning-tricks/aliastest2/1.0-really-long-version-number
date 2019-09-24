@@ -1,0 +1,20 @@
+#%Module1.0
+##
+## aliastest2
+
+set version 1.0-really-long-version-number
+proc ModulesHelp { } {
+   global version
+   puts stderr "
+Aliastest2: Dummy module for testing ability to alias modulepaths
+Version $version
+
+This package uses really long version numbers
+
+"
+}
+module-whatis "aliastest2 version $version"
+
+conflict aliastest2
+prepend-path PATH /software/aliastest2/$version/bin
+
