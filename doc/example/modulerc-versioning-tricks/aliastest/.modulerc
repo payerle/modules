@@ -1,0 +1,9 @@
+#%Module1.0
+##
+## Test of setting aliases
+
+# Alias test uses really long version numbers, so
+# we want to allow users to abbreviate
+
+module-alias aliastest/1.0 aliastest/1.0-really-long-version-number
+
