@@ -1,0 +1,43 @@
+mod3210: module purge
+mod3210: module load foo
+
+
+**** ERROR *****:
+
+foo/2.4 does not appear to be built for compiler gcc/8.2.0 and MPI nompi
+
+Please select a different openmpi version or different compiler/MPI library combination.
+
+
+
+
+mod3210: module list
+No Modulefiles Currently Loaded.
+mod3210: foo
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/foo-defaults.sh: line 6: foo: command not found
+mod3210: module purge
+mod3210: module load foo/1.1
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) gcc/8.2.0   2) foo/1.1
+mod3210: foo
+This is fake foo 1.1 (gcc/8.2.0, nompi)
+mod3210: module purge
+mod3210: module load pgi/18.4
+mod3210: module load foo
+
+
+**** ERROR *****:
+
+foo/2.4 does not appear to be built for compiler pgi/18.4 and MPI nompi
+
+Please select a different openmpi version or different compiler/MPI library combination.
+
+
+
+
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) pgi/18.4
+mod3210: foo
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/foo-defaults.sh: line 6: foo: command not found

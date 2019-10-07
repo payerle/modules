@@ -1,0 +1,9 @@
+# Part of "Compiler and other package dependencies" cookbook
+#
+# Common stuff for "intel" modulefiles
+# Using "homebrewed flavors" strategy
+#
+# Expects the following Tcl variables to have been previously set:
+#	version: version of gnu compiler collection
+#
+

@@ -1,0 +1,10 @@
+mod431: module purge
+mod431: module load bar
+ERROR: Unable to locate a modulefile for 'bar'
+mod431: module list
+No Modulefiles Currently Loaded.
+mod431: module purge
+mod431: module load bar/4.7
+ERROR: Unable to locate a modulefile for 'bar/4.7'
+mod431: module list
+No Modulefiles Currently Loaded.

@@ -1,0 +1,23 @@
+mod3210-flavours: module purge
+mod3210-flavours: module load foo
+foo/2.4 depends on one of the module(s) 'gnu intel pgi'
+mod3210-flavours: module list
+No Modulefiles Currently Loaded.
+mod3210-flavours: foo
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/foo-defaults.sh: line 6: foo: command not found
+mod3210-flavours: module purge
+mod3210-flavours: module load foo/1.1
+foo/1.1 depends on one of the module(s) 'gnu intel pgi'
+mod3210-flavours: module list
+No Modulefiles Currently Loaded.
+mod3210-flavours: foo
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/foo-defaults.sh: line 6: foo: command not found
+mod3210-flavours: module purge
+mod3210-flavours: module load pgi/18.4
+mod3210-flavours: module load foo
+foo/2.4 - no flavour compatible with modules 'pgi/18.4'
+mod3210-flavours: module list
+Currently Loaded Modulefiles:
+  1) pgi/18.4
+mod3210-flavours: foo
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/foo-defaults.sh: line 6: foo: command not found

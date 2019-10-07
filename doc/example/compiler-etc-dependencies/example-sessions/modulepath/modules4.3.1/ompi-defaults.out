@@ -1,0 +1,5 @@
+mod431: module purge
+mod431: module load openmpi/3.1
+ERROR: Unable to locate a modulefile for 'openmpi/3.1'
+mod431: module list
+No Modulefiles Currently Loaded.

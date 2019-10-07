@@ -1,0 +1,17 @@
+mod431: module purge
+mod431: module load pgi/18.4
+mod431: module load openmpi/3.1
+mod431: module load foo/1.1
+mod431: module list
+Currently Loaded Modulefiles:
+ 1) pgi/18.4   2) openmpi/3.1/pgi/18.4(default)   3) foo/1.1/pgi/18.4/nompi(default)  
+mod431: foo
+This is fake foo 1.1 (pgi/18.4, nompi)
+mod431: module --auto switch pgi intel/2018
+mod431: module list
+Currently Loaded Modulefiles:
+ 1) openmpi/3.1/pgi/18.4   2) foo/1.1/pgi/18.4/nompi(default)   3) intel/2018  
+mod431: foo
+This is fake foo 1.1 (pgi/18.4, nompi)
+mod431: mpirun
+This is fake mpirun (openmpi/3.1, pgi/18.4)

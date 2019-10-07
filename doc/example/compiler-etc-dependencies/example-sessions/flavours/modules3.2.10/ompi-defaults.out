@@ -1,0 +1,7 @@
+mod3210-flavours: module purge
+mod3210-flavours: module load openmpi/3.1
+openmpi/3.1 depends on one of the module(s) 'gnu intel pgi'
+mod3210-flavours: module list
+No Modulefiles Currently Loaded.
+mod3210-flavours: mpirun
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/ompi-defaults.sh: line 6: mpirun: command not found

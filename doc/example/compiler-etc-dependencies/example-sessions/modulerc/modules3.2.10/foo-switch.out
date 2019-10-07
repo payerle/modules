@@ -1,0 +1,19 @@
+mod3210: module purge
+mod3210: module load pgi/18.4
+mod3210: module load openmpi/3.1
+mod3210: module load foo/1.1
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) pgi/18.4(default)        3) foo/1.1/pgi/18.4/nompi
+  2) openmpi/3.1/pgi/18.4
+mod3210: foo
+This is fake foo 1.1 (pgi/18.4, nompi)
+mod3210: module switch pgi intel/2018
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) intel/2018               3) foo/1.1/pgi/18.4/nompi
+  2) openmpi/3.1/pgi/18.4
+mod3210: foo
+This is fake foo 1.1 (pgi/18.4, nompi)
+mod3210: mpirun
+This is fake mpirun (openmpi/3.1, pgi/18.4)

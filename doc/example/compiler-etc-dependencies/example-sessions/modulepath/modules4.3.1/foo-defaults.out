@@ -1,0 +1,18 @@
+mod431: module purge
+mod431: module load foo
+ERROR: Unable to locate a modulefile for 'foo'
+mod431: module list
+No Modulefiles Currently Loaded.
+mod431: module purge
+mod431: module load foo/1.1
+ERROR: Unable to locate a modulefile for 'foo/1.1'
+mod431: module list
+No Modulefiles Currently Loaded.
+mod431: module purge
+mod431: module load pgi/18.4
+mod431: module load foo
+mod431: module list
+Currently Loaded Modulefiles:
+ 1) pgi/18.4   2) foo/1.1  
+mod431: foo
+This is fake foo 1.1 (pgi/18.4, nompi)
