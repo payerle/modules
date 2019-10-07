@@ -1,0 +1,35 @@
+mod431: module purge
+mod431: module load gcc/9.1.0
+mod431: module load bar/avx2
+mod431: module list
+Currently Loaded Modulefiles:
+ 1) gcc/9.1.0   2) bar/avx2/gcc/9.1.0/5.4  
+mod431: bar
+This is fake bar 5.4 (gcc/9.1.0, avx2)
+mod431: module unload bar
+mod431: module load bar/avx
+mod431: module list
+Currently Loaded Modulefiles:
+ 1) gcc/9.1.0   2) bar/avx/gcc/9.1.0/5.4  
+mod431: bar
+This is fake bar 5.4 (gcc/9.1.0, avx)
+mod431: module unload bar
+mod431: module load bar/sse4.1
+
+
+**** ERROR *****:
+
+Compiler Mismatch
+
+Package bar/sse4.1 does not appear to be built for currently
+loaded compiler gcc/9.1.0.
+
+
+
+
+
+Loading bar/sse4.1/gcc/8.2.0/4.7
+  ERROR: Module evaluation aborted
+mod431: module list
+Currently Loaded Modulefiles:
+ 1) gcc/9.1.0  

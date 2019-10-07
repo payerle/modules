@@ -1,0 +1,3 @@
+mod431: module avail
+- $MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulepath/Core -
+gcc/8.2.0  gcc/9.1.0  intel/2018  intel/2019  pgi/18.4  pgi/19.4  

@@ -1,0 +1,32 @@
+mod3210: module purge
+mod3210: module load gcc/9.1.0
+mod3210: module load bar/avx2
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) gcc/9.1.0(default)       2) bar/avx2/gcc/9.1.0/5.4
+mod3210: bar
+This is fake bar 5.4 (gcc/9.1.0, avx2)
+mod3210: module unload bar
+mod3210: module load bar/avx
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) gcc/9.1.0(default)      2) bar/avx/gcc/9.1.0/5.4
+mod3210: bar
+This is fake bar 5.4 (gcc/9.1.0, avx)
+mod3210: module unload bar
+mod3210: module load bar/sse4.1
+
+
+**** ERROR *****:
+
+Compiler Mismatch
+
+Package bar/sse4.1 does not appear to be built for currently
+loaded compiler gcc/9.1.0.
+
+
+
+
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) gcc/9.1.0

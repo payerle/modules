@@ -1,0 +1,18 @@
+mod431: module purge
+mod431: module load gcc/9.1.0
+mod431: module load simd/avx
+mod431: module load bar/5.4
+mod431: module list
+Currently Loaded Modulefiles:
+ 1) gcc/9.1.0   2) simd/avx   3) bar/5.4  
+mod431: bar
+This is fake bar 5.4 (gcc/9.1.0, avx)
+mod431: module --auto switch simd simd/avx2
+Switching from simd/avx to simd/avx2
+  Unloading dependent: bar/5.4
+  Reloading dependent: bar/5.4
+mod431: module list
+Currently Loaded Modulefiles:
+ 1) gcc/9.1.0   2) simd/avx2   3) bar/5.4  
+mod431: bar
+This is fake bar 5.4 (gcc/9.1.0, avx2)

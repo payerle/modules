@@ -1,0 +1,23 @@
+mod3210: module purge
+mod3210: module load gcc/9.1.0
+mod3210: module load bar/avx2
+ModuleCmd_Load.c(213):ERROR:105: Unable to locate a modulefile for 'bar/avx2'
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) gcc/9.1.0
+mod3210: bar
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/bar-loads.sh.modulepath: line 6: bar: command not found
+mod3210: module unload bar
+mod3210: module load bar/avx
+ModuleCmd_Load.c(213):ERROR:105: Unable to locate a modulefile for 'bar/avx'
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) gcc/9.1.0
+mod3210: bar
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/bar-loads.sh.modulepath: line 6: bar: command not found
+mod3210: module unload bar
+mod3210: module load bar/sse4.1
+ModuleCmd_Load.c(213):ERROR:105: Unable to locate a modulefile for 'bar/sse4.1'
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) gcc/9.1.0

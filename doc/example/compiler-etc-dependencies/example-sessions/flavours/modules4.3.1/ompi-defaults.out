@@ -1,0 +1,8 @@
+mod431-flavours: module purge
+mod431-flavours: module load openmpi/3.1
+openmpi/3.1 depends on one of the module(s) 'gnu intel pgi'
+
+Loading openmpi/3.1
+  ERROR: Module evaluation aborted
+mod431-flavours: module list
+No Modulefiles Currently Loaded.

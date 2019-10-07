@@ -1,0 +1,7 @@
+mod3210: module purge
+mod3210: module load openmpi/3.1
+mod3210: module list
+Currently Loaded Modulefiles:
+  1) gcc/8.2.0     2) openmpi/3.1
+mod3210: mpirun
+This is fake mpirun (openmpi/3.1, gcc/8.2.0)
