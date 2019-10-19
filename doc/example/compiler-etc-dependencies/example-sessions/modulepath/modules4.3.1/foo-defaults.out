@@ -1,18 +1,33 @@
-mod431: module purge
-mod431: module load foo
+mod4.3.1 (modulepath)> module purge
+mod4.3.1 (modulepath)> module load foo
 ERROR: Unable to locate a modulefile for 'foo'
-mod431: module list
-No Modulefiles Currently Loaded.
-mod431: module purge
-mod431: module load foo/1.1
-ERROR: Unable to locate a modulefile for 'foo/1.1'
-mod431: module list
-No Modulefiles Currently Loaded.
-mod431: module purge
-mod431: module load pgi/18.4
-mod431: module load foo
-mod431: module list
+mod4.3.1 (modulepath)> module load gcc/8.2.0
+mod4.3.1 (modulepath)> module load foo
+mod4.3.1 (modulepath)> module list
+Currently Loaded Modulefiles:
+ 1) gcc/8.2.0   2) foo/1.1  
+mod4.3.1 (modulepath)> foo
+This is fake foo 1.1 (gcc/8.2.0, nompi)
+mod4.3.1 (modulepath)> module purge
+mod4.3.1 (modulepath)> module load foo
+ERROR: Unable to locate a modulefile for 'foo'
+mod4.3.1 (modulepath)> module load gcc/8.2.0
+mod4.3.1 (modulepath)> module load foo/2.4
+ERROR: Unable to locate a modulefile for 'foo/2.4'
+mod4.3.1 (modulepath)> module list
+Currently Loaded Modulefiles:
+ 1) gcc/8.2.0  
+mod4.3.1 (modulepath)> module load foo/1.1
+mod4.3.1 (modulepath)> module list
+Currently Loaded Modulefiles:
+ 1) gcc/8.2.0   2) foo/1.1  
+mod4.3.1 (modulepath)> foo
+This is fake foo 1.1 (gcc/8.2.0, nompi)
+mod4.3.1 (modulepath)> module purge
+mod4.3.1 (modulepath)> module load pgi/18.4
+mod4.3.1 (modulepath)> module load foo
+mod4.3.1 (modulepath)> module list
 Currently Loaded Modulefiles:
  1) pgi/18.4   2) foo/1.1  
-mod431: foo
+mod4.3.1 (modulepath)> foo
 This is fake foo 1.1 (pgi/18.4, nompi)

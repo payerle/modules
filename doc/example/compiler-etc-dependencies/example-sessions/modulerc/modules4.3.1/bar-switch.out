@@ -1,18 +1,14 @@
-mod431: module purge
-mod431: module load gcc/9.1.0
-mod431: module load simd/avx
-ERROR: Unable to locate a modulefile for 'simd/avx'
-mod431: module load bar/5.4
-mod431: module list
+mod4.3.1 (modulerc)> module purge
+mod4.3.1 (modulerc)> module load gcc/9.1.0
+mod4.3.1 (modulerc)> module load bar/avx
+mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
- 1) gcc/9.1.0   2) bar/5.4/gcc/9.1.0/avx2  
-mod431: bar
-This is fake bar 5.4 (gcc/9.1.0, avx2)
-mod431: module --auto switch simd simd/avx2
-Switching from simd to simd/avx2
-  ERROR: Unable to locate a modulefile for 'simd/avx2'
-mod431: module list
+ 1) gcc/9.1.0   2) bar/avx/gcc/9.1.0/5.4  
+mod4.3.1 (modulerc)> bar
+This is fake bar 5.4 (gcc/9.1.0, avx)
+mod4.3.1 (modulerc)> module switch --auto bar bar/avx2
+mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
- 1) gcc/9.1.0   2) bar/5.4/gcc/9.1.0/avx2  
-mod431: bar
+ 1) gcc/9.1.0   2) bar/avx2/gcc/9.1.0/5.4  
+mod4.3.1 (modulerc)> bar
 This is fake bar 5.4 (gcc/9.1.0, avx2)

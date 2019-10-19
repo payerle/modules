@@ -1,16 +1,14 @@
-mod3210: module purge
-mod3210: module load gcc/9.1.0
-mod3210: module load bar/avx
-ModuleCmd_Load.c(213):ERROR:105: Unable to locate a modulefile for 'bar/avx'
-mod3210: module list
+mod3.2.10 (modulepath)> module purge
+mod3.2.10 (modulepath)> module load gcc/9.1.0
+mod3.2.10 (modulepath)> module load bar/5.4/avx
+mod3.2.10 (modulepath)> module list
 Currently Loaded Modulefiles:
-  1) gcc/9.1.0
-mod3210: bar
-$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/bar-switch.sh.modulepath: line 6: bar: command not found
-mod3210: module switch avx avx2
-ModuleCmd_Switch.c(172):ERROR:152: Module 'avx' is currently not loaded
-mod3210: module list
+  1) gcc/9.1.0     2) bar/5.4/avx
+mod3.2.10 (modulepath)> bar
+This is fake bar 5.4 (gcc/9.1.0, avx)
+mod3.2.10 (modulepath)> module switch bar bar/5.4/avx2
+mod3.2.10 (modulepath)> module list
 Currently Loaded Modulefiles:
-  1) gcc/9.1.0
-mod3210: bar
-$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/bar-switch.sh.modulepath: line 6: bar: command not found
+  1) gcc/9.1.0      2) bar/5.4/avx2
+mod3.2.10 (modulepath)> bar
+This is fake bar 5.4 (gcc/9.1.0, avx2)

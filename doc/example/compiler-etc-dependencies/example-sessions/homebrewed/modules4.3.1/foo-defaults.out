@@ -1,5 +1,5 @@
-mod431: module purge
-mod431: module load foo
+mod4.3.1 (homebrewed)> module purge
+mod4.3.1 (homebrewed)> module load foo
 
 
 **** ERROR *****:
@@ -14,20 +14,20 @@ Please select a different openmpi version or different compiler/MPI library comb
 
 Loading foo/2.4
   ERROR: Module evaluation aborted
-mod431: module list
+mod4.3.1 (homebrewed)> module list
 No Modulefiles Currently Loaded.
-mod431: module purge
-mod431: module load foo/1.1
+mod4.3.1 (homebrewed)> module purge
+mod4.3.1 (homebrewed)> module load foo/1.1
 Loading foo/1.1
   Loading requirement: gcc/8.2.0
-mod431: module list
+mod4.3.1 (homebrewed)> module list
 Currently Loaded Modulefiles:
  1) gcc/8.2.0   2) foo/1.1  
-mod431: foo
+mod4.3.1 (homebrewed)> foo
 This is fake foo 1.1 (gcc/8.2.0, nompi)
-mod431: module purge
-mod431: module load pgi/18.4
-mod431: module load foo
+mod4.3.1 (homebrewed)> module purge
+mod4.3.1 (homebrewed)> module load pgi/18.4
+mod4.3.1 (homebrewed)> module load foo
 
 
 **** ERROR *****:
@@ -42,6 +42,6 @@ Please select a different openmpi version or different compiler/MPI library comb
 
 Loading foo/2.4
   ERROR: Module evaluation aborted
-mod431: module list
+mod4.3.1 (homebrewed)> module list
 Currently Loaded Modulefiles:
  1) pgi/18.4  

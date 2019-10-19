@@ -1,9 +1,17 @@
-mod431: module purge
-mod431: module load openmpi/3.1
+mod4.3.1 (modulerc)> module purge
+mod4.3.1 (modulerc)> module load openmpi/3.1
 Loading openmpi/3.1/gcc/8.2.0
   Loading requirement: gcc/8.2.0
-mod431: module list
+mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) gcc/8.2.0   2) openmpi/3.1/gcc/8.2.0(default)  
-mod431: mpirun
+mod4.3.1 (modulerc)> mpirun
+This is fake mpirun (openmpi/3.1, gcc/8.2.0)
+mod4.3.1 (modulerc)> module purge
+mod4.3.1 (modulerc)> module load gcc/8.2.0
+mod4.3.1 (modulerc)> module load openmpi
+mod4.3.1 (modulerc)> module list
+Currently Loaded Modulefiles:
+ 1) gcc/8.2.0   2) openmpi/gcc/8.2.0/3.1  
+mod4.3.1 (modulerc)> mpirun
 This is fake mpirun (openmpi/3.1, gcc/8.2.0)

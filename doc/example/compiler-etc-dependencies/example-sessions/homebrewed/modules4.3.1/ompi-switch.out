@@ -1,17 +1,17 @@
-mod431: module purge
-mod431: module load pgi/19.4
-mod431: module load openmpi/4.0
-mod431: module list
+mod4.3.1 (homebrewed)> module purge
+mod4.3.1 (homebrewed)> module load pgi/19.4
+mod4.3.1 (homebrewed)> module load openmpi/4.0
+mod4.3.1 (homebrewed)> module list
 Currently Loaded Modulefiles:
  1) pgi/19.4   2) openmpi/4.0  
-mod431: mpirun
+mod4.3.1 (homebrewed)> mpirun
 This is fake mpirun (openmpi/4.0, pgi/19.4)
-mod431: module --auto switch pgi intel/2019
+mod4.3.1 (homebrewed)> module switch --auto pgi intel/2019
 Switching from pgi/19.4 to intel/2019
   Unloading dependent: openmpi/4.0
   Reloading dependent: openmpi/4.0
-mod431: module list
+mod4.3.1 (homebrewed)> module list
 Currently Loaded Modulefiles:
  1) intel/2019   2) openmpi/4.0  
-mod431: mpirun
+mod4.3.1 (homebrewed)> mpirun
 This is fake mpirun (openmpi/4.0, intel/2019)

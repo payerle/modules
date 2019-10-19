@@ -54,11 +54,14 @@ proc GetKnownMpiFamilies { } {
 # Takes an optional argument, 
 #	useIntel: boolean, default false.  If set, returns 'intelmpi' if
 #		no MPI library is loaded but intel compiler is loaded
-proc GetLoadedMPI { { useIntel 0} } {
+#	forceIt: boolean, default false.  If set, prereq MPI lib before returning.
+#	requireIt: boolean, default false.  If set, prereq the MPI library
+proc GetLoadedMPI { { useIntel 0} {forceIt 0} {requireIt 0} } {
    set mtag {}
    foreach mfam [ GetKnownMpiFamilies ] {
       if { [ is-loaded $mfam ] } {
          set mtag [ GetTagOfModuleLoaded $mfam  ]
+         if { $requireIt } { prereq $ctag }
          return $mtag
       }
    }
