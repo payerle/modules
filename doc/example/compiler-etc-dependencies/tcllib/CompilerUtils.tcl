@@ -59,10 +59,8 @@ proc GetKnownCompilerFamilies { } {
 #		was defaulted from path of GetDefaultCompiler, we will
 #		module load that compiler.
 #		Ignored unless either pathDefault or useDefault is set
-#	requireIt: boolean, default false.  If set and a compiler
-#		was defaulted from path of GetDefaultCompiler, we will
-#		prereq that compiler.
-#		Ignored unless either pathDefault or useDefault is set
+#	requireIt: boolean, default false.  If set, we will prereq the
+#		compiler before returning.
 
 proc GetLoadedCompiler {{pathDefault 0} { useDefault 0} 
    {loadIt 0 } { requireIt 0 } } {

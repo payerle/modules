@@ -1,27 +1,27 @@
-mod431: module purge
-mod431: module load pgi/19.4
-mod431: module load openmpi/4.0
-mod431: module list
+mod4.3.1 (modulerc)> module purge
+mod4.3.1 (modulerc)> module load pgi/19.4
+mod4.3.1 (modulerc)> module load openmpi/4.0
+mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) pgi/19.4   2) openmpi/4.0/pgi/19.4(default)  
-mod431: mpirun
+mod4.3.1 (modulerc)> mpirun
 This is fake mpirun (openmpi/4.0, pgi/19.4)
-mod431: module unload openmpi
-mod431: module switch pgi intel/2019
-mod431: module load openmpi/4.0
-mod431: module list
+mod4.3.1 (modulerc)> module unload openmpi
+mod4.3.1 (modulerc)> module switch --auto pgi intel/2019
+mod4.3.1 (modulerc)> module load openmpi/4.0
+mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) intel/2019   2) openmpi/4.0/intel/2019(default)  
-mod431: mpirun
+mod4.3.1 (modulerc)> mpirun
 This is fake mpirun (openmpi/4.0, intel/2019)
-mod431: module unload openmpi
-mod431: module switch intel gcc/9.1.0
-mod431: module load openmpi/4.0
-mod431: mpirun
+mod4.3.1 (modulerc)> module unload openmpi
+mod4.3.1 (modulerc)> module switch --auto intel gcc/9.1.0
+mod4.3.1 (modulerc)> module load openmpi/4.0
+mod4.3.1 (modulerc)> mpirun
 This is fake mpirun (openmpi/4.0, gcc/9.1.0)
-mod431: module unload openmpi
-mod431: module switch gcc gcc/8.2.0
-mod431: module load openmpi/4.0
+mod4.3.1 (modulerc)> module unload openmpi
+mod4.3.1 (modulerc)> module switch --auto gcc gcc/8.2.0
+mod4.3.1 (modulerc)> module load openmpi/4.0
 
 
 **** ERROR *****:
@@ -37,6 +37,6 @@ loaded compiler gcc/8.2.0.
 
 Loading openmpi/4.0/gcc/9.1.0
   ERROR: Module evaluation aborted
-mod431: module list
+mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) gcc/8.2.0  

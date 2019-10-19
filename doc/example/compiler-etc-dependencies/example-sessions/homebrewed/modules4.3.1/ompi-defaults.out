@@ -1,9 +1,29 @@
-mod431: module purge
-mod431: module load openmpi/3.1
+mod4.3.1 (homebrewed)> module purge
+mod4.3.1 (homebrewed)> module load openmpi/3.1
 Loading openmpi/3.1
   Loading requirement: gcc/8.2.0
-mod431: module list
+mod4.3.1 (homebrewed)> module list
 Currently Loaded Modulefiles:
  1) gcc/8.2.0   2) openmpi/3.1  
-mod431: mpirun
-This is fake mpirun (openmpi/3.1, gcc/8.2.0)
+mod4.3.1 (homebrewed)> bar
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/common_code.sh: line 35: bar: command not found
+mod4.3.1 (homebrewed)> module purge
+mod4.3.1 (homebrewed)> module load gcc/8.2.0
+mod4.3.1 (homebrewed)> module load openmpi
+
+
+**** ERROR *****:
+
+openmpi/4.0 does not appear to be built for compiler gcc/8.2.0
+
+Please select a different openmpi version or different compiler.
+
+
+
+
+
+Loading openmpi/4.0
+  ERROR: Module evaluation aborted
+mod4.3.1 (homebrewed)> module list
+Currently Loaded Modulefiles:
+ 1) gcc/8.2.0  

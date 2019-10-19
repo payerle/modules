@@ -1,14 +1,10 @@
-mod3210-flavours: module purge
-mod3210-flavours: module load bar
+mod3.2.10-flavours> module purge
+mod3.2.10-flavours> module load bar
 bar/5.4 depends on one of the module(s) 'gnu intel pgi'
-mod3210-flavours: module list
+mod3.2.10-flavours> module list
 No Modulefiles Currently Loaded.
-mod3210-flavours: bar
-$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/bar-defaults.sh: line 6: bar: command not found
-mod3210-flavours: module purge
-mod3210-flavours: module load bar/4.7
+mod3.2.10-flavours> module purge
+mod3.2.10-flavours> module load bar/4.7
 bar/4.7 depends on one of the module(s) 'gnu intel pgi'
-mod3210-flavours: module list
+mod3.2.10-flavours> module list
 No Modulefiles Currently Loaded.
-mod3210-flavours: bar
-$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/bar-defaults.sh: line 6: bar: command not found

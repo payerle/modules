@@ -1,17 +1,31 @@
-mod431: module purge
-mod431: module load pgi/18.4
-mod431: module load openmpi/3.1
-mod431: module load foo/1.1
-mod431: module list
+mod4.3.1 (modulerc)> module purge
+mod4.3.1 (modulerc)> module load pgi/18.4
+mod4.3.1 (modulerc)> module load openmpi/3.1
+mod4.3.1 (modulerc)> module load foo/1.1
+mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) pgi/18.4   2) openmpi/3.1/pgi/18.4(default)   3) foo/1.1/pgi/18.4/nompi(default)  
-mod431: foo
+mod4.3.1 (modulerc)> foo
 This is fake foo 1.1 (pgi/18.4, nompi)
-mod431: module --auto switch pgi intel/2018
-mod431: module list
+mod4.3.1 (modulerc)> module switch --auto pgi intel/2018
+mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) openmpi/3.1/pgi/18.4   2) foo/1.1/pgi/18.4/nompi(default)   3) intel/2018  
-mod431: foo
+mod4.3.1 (modulerc)> foo
 This is fake foo 1.1 (pgi/18.4, nompi)
-mod431: mpirun
+mod4.3.1 (modulerc)> mpirun
 This is fake mpirun (openmpi/3.1, pgi/18.4)
+mod4.3.1 (modulerc)> module purge
+mod4.3.1 (modulerc)> module load intel/2019
+mod4.3.1 (modulerc)> module load foo
+mod4.3.1 (modulerc)> module list
+Currently Loaded Modulefiles:
+ 1) intel/2019   2) foo/intel/2019/nompi/2.4  
+mod4.3.1 (modulerc)> foo
+This is fake foo 2.4 (intel/2019, nompi)
+mod4.3.1 (modulerc)> module load openmpi
+mod4.3.1 (modulerc)> module list
+Currently Loaded Modulefiles:
+ 1) intel/2019   2) foo/intel/2019/nompi/2.4   3) openmpi/intel/2019/4.0  
+mod4.3.1 (modulerc)> foo
+This is fake foo 2.4 (intel/2019, nompi)
