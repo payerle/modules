@@ -25,7 +25,7 @@ proc RequireMPI { mympi {noLoadIntel 0} } {
          if { $curComp ne {} } {
             set curCompSplit [ split $curComp / ]
             set curCompBase [ lindex $curCompSplit 0 ]
-            if { $curCompBase eq intel } { 
+            if { $curCompBase eq {intel} } { 
                # $noLoadIntel is set, requested MPI is intel MPI, and intel compiler loaded
                return
             }

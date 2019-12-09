@@ -49,3 +49,24 @@ if [ $err -eq 0 ]; then
 		;;
 	esac
 fi
+case $TMP_STRATEGY in
+   modulerc)
+	do_cmd module purge
+	do_cmd module load bar/avx
+	do_cmd module list
+	do_cmd bar
+	do_cmd module purge
+	do_cmd module load gcc/9.1.0
+	do_cmd module load bar/avx
+	do_cmd module list
+	do_cmd bar
+	do_cmd module purge
+	do_cmd module load bar/avx2
+	do_cmd module list
+	do_cmd bar
+	do_cmd module purge
+	do_cmd module load bar/sse4.1
+	do_cmd module list
+	do_cmd bar
+	;;
+esac

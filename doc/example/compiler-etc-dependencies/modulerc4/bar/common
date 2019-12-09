@@ -41,9 +41,9 @@ SIMD Support: $simdTag
 module-whatis "Fake bar $version ($compilerTag, $simdTag)"
 
 # Make sure loaded compiler matches what we want.
-#LoadedCompilerMatches $compilerTag 1 1
+LoadedCompilerMatches $compilerTag 1 1
 # For Environmental Modules 3.x, set requireIt to false
-LoadedCompilerMatches $compilerTag 0 1
+#LoadedCompilerMatches $compilerTag 0 1
 
 # Compute the installation prefix
 set pkgroot $swroot/bar

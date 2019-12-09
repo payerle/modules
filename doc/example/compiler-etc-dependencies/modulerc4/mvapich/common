@@ -36,9 +36,9 @@ module-whatis "Fake mvapich $version (built for $compilerTag)"
 
 # Make sure loadedCompiler matches what we want.  And
 # load compiler if no compiler loaded
-#LoadedCompilerMatches $compilerTag 1 1
+LoadedCompilerMatches $compilerTag 1 1
 # For Env Modules 3.x, set requireIt to 0
-LoadedCompilerMatches $compilerTag 0 1
+#LoadedCompilerMatches $compilerTag 0 1
 
 #Compute the installation prefix
 set pkgroot $swroot/mvapich
