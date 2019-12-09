@@ -12,11 +12,13 @@
 # requireIt: boolean, default false. If set, will prereq $wanted
 # loadIt: boolean, default false. If set, load $wanted
 #	if no MPI is already loaded
+# noLoadIntel: boolean, passed to RequireMPI.  If set,
+#	will not attempt to load intelmpi variants if compiler is intel
 # forceNoMpi: boolean, default false.  If set and $wanted is 'nompi', 
 #  	insist that no MPI module is loaded
 # modTag: string, defaults go [module-info specified].  Used in error messages
 
-proc LoadedMpiMatches { wanted {requireIt 0} { loadIt 0 } 
+proc LoadedMpiMatches { wanted {requireIt 0} { loadIt 0 } { noLoadIntel 0 }
    { forceNoMpi 0 } {modTag {} } } {
    # Default modTag
    if { $modTag eq {} } { set modTag [ module-info specified ] }
@@ -49,7 +51,7 @@ Please unload the MPI library and try again.
    # abd return
    if { $loaded eq {} } {
       if { $loadIt } { 
-         RequireMPI $wanted 0
+         RequireMPI $wanted $noLoadIntel
          if { $requireIt } { prereq $wanted }
       }
       return

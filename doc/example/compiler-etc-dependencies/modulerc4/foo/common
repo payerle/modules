@@ -41,11 +41,12 @@ module-whatis "Fake foo $version ($compilerTag, $mpiTag)"
 
 # Make sure loaded compiler and MPI match what we want.
 # And load them if not already loaded
-#LoadedCompilerMatches $compilerTag 1 1
-#LoadedMpiMatches $mpiTag 1 1
+LoadedCompilerMatches $compilerTag 1 1
+# But don't load intelmpi if compiler is intel
+LoadedMpiMatches $mpiTag 1 1 1
 # For Env Modules 3.x, set requireIt to false
-LoadedCompilerMatches $compilerTag 0 1
-LoadedMpiMatches $mpiTag 0 1
+#LoadedCompilerMatches $compilerTag 0 1
+#LoadedMpiMatches $mpiTag 0 1 1
 
 # Compute the installation prefix
 set pkgroot $swroot/foo

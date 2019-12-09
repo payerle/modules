@@ -20,8 +20,15 @@ do_cmd module load foo/2.4
 do_cmd module list
 do_cmd foo
 do_cmd module unload foo
-do_cmd module load intelmpi
-do_cmd module load foo/2.4
+case $TMP_STRATEGY in
+   flavours|homebrewed|modulepath)
+	do_cmd module load intelmpi
+	do_cmd module load foo/2.4
+	;;
+   modulerc)
+	do_cmd module load foo/2.4/intel/2019/nompi
+	;;
+esac
 do_cmd module list
 do_cmd foo
 do_cmd module unload foo
