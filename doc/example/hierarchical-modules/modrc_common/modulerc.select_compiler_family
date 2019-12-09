@@ -27,7 +27,7 @@
 # In production, this should ideally be in a site config file.
 # At minimum, hardcode the path
 set rootdir $::env(MOD_GIT_ROOTDIR)
-set tcllibdir $rootdir/doc/example/compiler-etc-dependencies/tcllib
+set tcllibdir $rootdir/doc/example/hierarchical-modules/tcllib
 source $tcllibdir/common_utilities.tcl
 
 set moduledir [file dirname $ModulesCurrentModulefile]

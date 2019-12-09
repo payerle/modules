@@ -26,5 +26,5 @@ VERSIONPATH=undef
 WANTS_VERSIONING=0
 WITH_DEBUG_INFO=undef
 
-mod3.2.10 (modulepath)> echo MODULEPATH=$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulepath/Core
-MODULEPATH=$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulepath/Core
+mod3.2.10 (modulepath)> echo MODULEPATH=$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/modulepath/Core
+MODULEPATH=$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/modulepath/Core

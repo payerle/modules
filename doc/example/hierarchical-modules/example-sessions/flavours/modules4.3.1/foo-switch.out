@@ -26,12 +26,14 @@ This is fake mpirun (openmpi/3.1, pgi/18.4)
 mod4.3.1-flavours> module purge
 Unloading foo/1.1
   Module ERROR: invalid command name "flavours"
-    In '$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/flavours/foo/1.1'
+    In
+    '$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/flavours/foo/1.1'
     Please contact <root@localhost>
 
 Unloading openmpi/3.1
   Module ERROR: invalid command name "flavours"
-    In '$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/flavours/openmpi/3.1'
+    In
+    '$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/flavours/openmpi/3.1'
     Please contact <root@localhost>
 /homes/payerle/modules/install/mod4.3.1-flavours/init/bash: line 86: WRAPPER:: command not found
 /homes/payerle/modules/install/mod4.3.1-flavours/init/bash: line 87: WRAPPER:: command not found

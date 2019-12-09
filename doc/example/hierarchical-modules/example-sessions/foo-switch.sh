@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source $MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/common_code.sh
+source $MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/example-sessions/common_code.sh
 
 do_cmd module purge
 do_cmd module load pgi/18.4

@@ -26,5 +26,5 @@ VERSIONPATH=undef
 WANTS_VERSIONING=0
 WITH_DEBUG_INFO=undef
 
-mod3.2.10 (modulerc)> echo MODULEPATH=$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulerc3
-MODULEPATH=$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulerc3
+mod3.2.10 (modulerc)> echo MODULEPATH=$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/modulerc3
+MODULEPATH=$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/modulerc3

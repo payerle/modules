@@ -1,8 +1,8 @@
-.. _compiler-etc-dependencies:
+.. _hierarchical_modules:
 
-================================================
-Handling Compiler and other Package Dependencies
-================================================
+======================================
+Support for Hierarchical Module files
+======================================
 
 When creating a collection of software (applications and libraries)
 for users to use, there is a problem of ensuring that the
@@ -35,7 +35,7 @@ which you can explore.  As the examples are a bit more elaborate
 than in some other cookbooks, and as they make use of the same modulefile
 names, the examples for the different strategies do not play well
 with each other.  So each strategy has its own modulefile tree underneath
-``doc/example/compiler-etc-dependencies``.  Furthermore, we use some 
+``doc/example/hierarchical-modules``.  Furthermore, we use some 
 modulefile names (e.g. gcc,
 intel, pgi, openmpi, etc) that likely are present on your system as well,
 so your production environment might interfere with the examples as
@@ -74,7 +74,7 @@ Overview of Examples
 --------------------
 
 For the example cases, we make use of the example software library
-(located at ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/fake-sw-root``)
+(located at ``$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/fake-sw-root``)
 consisting of
 
   * GNU compiler versions 8.2.0 and 9.1.0
@@ -286,11 +286,11 @@ you must
    the Flavours installed.
 #. Set (and export) MOD_GIT_ROOTDIR to where you git-cloned the modules source
 #. Do a ``module purge``, and then set your MODULEPATH 
-   to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/flavours``
+   to ``$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/flavours``
 
 We start with the ``module avail`` command:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules4.3.1/modavail.out
+.. include:: ../../example/hierarchical-modules/example-sessions/flavours/modules4.3.1/modavail.out
 
 We note that we only see the package names and versions; e.g. foo/2.4, without any mention
 of the compilers and MPI libraries for which it is built.  This terser stype was an intentional
@@ -300,13 +300,13 @@ approach relies on seeing what modules have been loaded previously in order to d
 which depend on the CPU vectorization commands supported, we need to add a "dummy" package ``simd``.
 The module definition is quite trivial; a simple stub file like
 
-.. include:: ../../example/compiler-etc-dependencies/flavours/simd/avx
+.. include:: ../../example/hierarchical-modules/flavours/simd/avx
     :literal:
 
 and the main content in the ``common`` file:
 
 
-.. include:: ../../example/compiler-etc-dependencies/flavours/simd/common
+.. include:: ../../example/hierarchical-modules/flavours/simd/common
     :literal:
 
 Basically it just declares a help procedure and whatis text.  This way, an user can
@@ -347,7 +347,7 @@ With the openmpi and mvapich MPI libraries, things start to get interesting.  Th
 should setup the environment for a different build depending on the compiler loaded.  The
 real work is done in the ``common`` tcl file, as shown below:
 
-.. include:: ../../example/compiler-etc-dependencies/flavours/openmpi/common
+.. include:: ../../example/hierarchical-modules/flavours/openmpi/common
     :literal:
 
 Like the previous cases, the file starts with the Tcl command to load the
@@ -374,7 +374,7 @@ the same as a standard Modules ``prepend-path PATH $swroot/openmpi/4.0/1/gnu-9.1
 
 The following shows how this would appear to the user:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules4.3.1/ompi-loads1.out
+.. include:: ../../example/hierarchical-modules/example-sessions/flavours/modules4.3.1/ompi-loads1.out
     :literal:
 
 Here we note that once a compiler is loaded, the PATH and the other environmental 
@@ -390,7 +390,7 @@ then reloaded openmpi.  A nice feature of Flavours is that it can handle the
 switching out of compilers or other modulefiles which other modulefiles depend on,
 as:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules3.2.10/ompi-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/flavours/modules3.2.10/ompi-switch.out
     :literal:
 
 Note that when we switched between the pgi and intel compilers above, Flavours
@@ -403,7 +403,7 @@ of Environmental Modules; it does not* appear to work with 4.3.1.
 We also note that if we attempt to load openmpi without having previously loading a compiler,
 we will get an error:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules4.3.1/ompi-defaults.out
+.. include:: ../../example/hierarchical-modules/example-sessions/flavours/modules4.3.1/ompi-defaults.out
     :literal:
 
 In particular, there is no support for a "default" compiler; if e.g. you wished to make the
@@ -419,7 +419,7 @@ The situation for ``foo`` is more complicated, as it depends both on the compile
 optionally on the MPI library.  But with Flavours, the modulefile is only slightly more 
 complicated, e.g. for the common file is:
 
-.. include:: ../../example/compiler-etc-dependencies/flavours/foo/common
+.. include:: ../../example/hierarchical-modules/flavours/foo/common
     :literal:
 
 Basically, the main difference is the addition of the 
@@ -434,7 +434,7 @@ evaluate to ``$swroot/foo/2.4/1/gnu-9.1.0``.
 
 We show how it works below:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules4.3.1/foo-loads.out
+.. include:: ../../example/hierarchical-modules/example-sessions/flavours/modules4.3.1/foo-loads.out
     :literal:
 
 So basically, if the user loads a compiler, the 
@@ -449,7 +449,7 @@ The 3.x version of Environmental Modules supports using the switch command on
 either the compiler or MPI library, and will result in reloading of foo and the MPI
 library.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules3.2.10/foo-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/flavours/modules3.2.10/foo-switch.out
     :literal:
 
 In particular note the final case, wherein we load intel/2019 and foo, getting the
@@ -463,7 +463,7 @@ Our final example for flavours is the ``bar`` command.  Here in addition to the
 compiler dependency, we have versions for different SIMD vectorization supported.
 Again, the difference in the modulefile is small, e.g.
 
-.. include:: ../../example/compiler-etc-dependencies/flavours/bar/common
+.. include:: ../../example/hierarchical-modules/flavours/bar/common
     :literal:
 
 Basically, the optional ``flavours prereq`` on the mpi class from the ``foo`` package
@@ -472,7 +472,7 @@ We note that Flavours package knows nothing about our ``simd`` dummy package unt
 we add it as a prereq for bar.  (This is in contrast to the compiler and mpi classes).
 Usage would be like:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules4.3.1/bar-loads.out
+.. include:: ../../example/hierarchical-modules/example-sessions/flavours/modules4.3.1/bar-loads.out
     :literal:
 
 Here we note that as both the compiler and simd prereqs are non-optional, it complains
@@ -542,7 +542,7 @@ one site config file).
 We discuss the various Tcl procedures here, as they are what provide most of the
 functionality.  We start with the routines for generic loaded modules:
 
-.. include:: ../../example/compiler-etc-dependencies/tcllib/LoadedModules.tcl
+.. include:: ../../example/hierarchical-modules/tcllib/LoadedModules.tcl
     :literal:
 
 This defines the two Tcl procedures:
@@ -556,7 +556,7 @@ The Tcl procedure **GetTagOfModuleLoaded** can be used to find out what version
 of a given package is loaded, and is enough for many packages.  However, for
 compilers, and similar, a bit more is needed.  For compilers:
 
-.. include:: ../../example/compiler-etc-dependencies/tcllib/CompilerUtils.tcl
+.. include:: ../../example/hierarchical-modules/tcllib/CompilerUtils.tcl
     :literal:
 
 We defined four procedures above:
@@ -589,7 +589,7 @@ found before returning.
 
 A similar set of procedures exist for the MPI libraries, namely:
 
-.. include:: ../../example/compiler-etc-dependencies/tcllib/MpiUtils.tcl
+.. include:: ../../example/hierarchical-modules/tcllib/MpiUtils.tcl
     :literal:
 
 The three procedures here are analogues of the compiler versions:
@@ -620,7 +620,7 @@ The interesting bit begins with the openmpi and mvapich modulefiles.  These
 both depend on the compiler, we show the main part of the openmpi modulefile
 below:
 
-.. include:: ../../example/compiler-etc-dependencies/homebrewed/openmpi/common
+.. include:: ../../example/hierarchical-modules/homebrewed/openmpi/common
     :literal:
 
 We begin by sourcing the ``common_utilities`` file which defined the previously
@@ -642,7 +642,7 @@ package installation path exists.
 
 The modulefile for ``foo`` is a bit more complex:
 
-.. include:: ../../example/compiler-etc-dependencies/homebrewed/foo/common
+.. include:: ../../example/hierarchical-modules/homebrewed/foo/common
     :literal:
 
 The main difference between this modulefile, depending on both compiler and
@@ -659,19 +659,19 @@ We now look at the example modulefiles for the homebrewed flavors strategies.
 To use the examples, you must
 #. Set (and export) MOD_GIT_ROOTDIR to where you git-cloned the modules source
 #. Do a ``module purge``, and then set your MODULEPATH 
-   to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/homebrewed
+   to ``$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/homebrewed
 
 The ``homebrewed flavors`` strategy behaves much like the ``Flavours``
 strategy in practice.  The module avail command,
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/modavail.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/modavail.out
     :literal:
 
 looks basically the same, showing the a concise listing of packages and 
 versions without information on the compilers and MPI libraries they were
 built with.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/ompi-loads1.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/ompi-loads1.out
     :literal:
 
 Again, once a compiler is loaded, loading openmpi will set the PATH, etc. for
@@ -688,7 +688,7 @@ dependent modulefiles to be reloaded if a module they depend on gets switched
 out.  However, the automated module handling in Environmental Modules 4.2.0
 does just that, so we can do something like:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/ompi-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/ompi-switch.out
     :literal:
 
 Note that we include the ``--auto`` option to the module command; the 
@@ -699,7 +699,7 @@ option not enabled), the modulefile for the compiler will be switched out,
 but that for openmpi would not, leading to a mismatch, as indicated in the
 snippet below (using Environmental Modules 3.2.10):
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules3.2.10/ompi-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules3.2.10/ompi-switch.out
     :literal:
 
 And the ``module list`` command really does not inform you of this (other than perhaps
@@ -707,7 +707,7 @@ by the fact that the openmpi module is after the foo module).  We note that the 
 default the compiler, so when we attempt to load openmpi without having
 previously loaded a compiler, as in
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/ompi-defaults.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/ompi-defaults.out
     :literal:
 
 it will default to the default compiler, gcc/8.2.0.  Note however, that if
@@ -716,7 +716,7 @@ and fail to load as there is no build of openmpi/4.0 for gcc/8.2.0.
 
 The situation is similar for foo:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/foo-loads.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/foo-loads.out
     :literal:
 
 Again, one can load a compiler without an MPI library to get the non-MPI version
@@ -725,7 +725,7 @@ intelmpi modulefile is used to allow one to indicate that the Intel MPI library
 is desired.  The automatic module handling can again allow the switch 
 functionality work properly, as in
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/foo-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/foo-switch.out
     :literal:
 
 Here we note a deficiency in the switch support as compared to ``Flavours``.  In the last example
@@ -735,7 +735,7 @@ by the output of the fake foo command.  I.e., the foo package was *not* automati
 there was no prereq in the foo modulefile on an MPI library (as in the non-MPI build there is no MPI
 library to prereq).  Also note that module list does not really inform one of this fact.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/foo-defaults.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/foo-defaults.out
     :literal:
 
 Above, we see once more that the compiler can be defaulted, but that the 
@@ -746,20 +746,20 @@ The situation with bar is basically the same; with a compiler and simd
 module loaded, the environment for the appropriate build of bar is loaded
 when you module load bar.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/bar-loads.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/bar-loads.out
     :literal:
 
 And an error is generated if there is no build for that combination of 
 compiler and simd.  The automatic handling of modules again allows the
 switch command to work as expected:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/bar-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/bar-switch.out
     :literal:
 
 and both the simd level and compiler can be defaulted, but one still has
 to choose a version of bar which supports the defaults.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/bar-defaults.out
+.. include:: ../../example/hierarchical-modules/example-sessions/homebrewed/modules4.3.1/bar-defaults.out
     :literal:
 
 Summary of homebrewed flavors strategy
@@ -836,7 +836,7 @@ default to the family portion of the compiler (e.g. gcc, intel, or pgi),
 and one for the version.  For the family portion of the compiler, 
 we have the file ``modulerc.select_compiler_family`` as below:
 
-.. include:: ../../example/compiler-etc-dependencies/modrc_common/modulerc.select_compiler_family
+.. include:: ../../example/hierarchical-modules/modrc_common/modulerc.select_compiler_family
     :literal:
 
 The file starts by sourcing a set of useful Tcl procedures. For the purpose
@@ -862,7 +862,7 @@ to it.  For this purpose, we use the Tcl procedure ``FirstChildModuleInList``
 (defined in ``common_utilities.tcl``).  This and a related procedure are
 defined as:
 
-.. include:: ../../example/compiler-etc-dependencies/tcllib/ChildModules.tcl
+.. include:: ../../example/hierarchical-modules/tcllib/ChildModules.tcl
     :literal:
 
 and basically make use of the Tcl variable ``ModulesCurrentModulefile``.  They
@@ -876,7 +876,7 @@ ChildModuleExists procedure will not see the intel directory.
 
 The ``modulerc.select_compiler_version`` file is similar,
 
-.. include:: ../../example/compiler-etc-dependencies/modrc_common/modulerc.select_compiler_version
+.. include:: ../../example/hierarchical-modules/modrc_common/modulerc.select_compiler_version
     :literal:
 
 Again, we source the ``common_utitilies.tcl`` file and use 
@@ -911,7 +911,7 @@ apropriate build for the requested package; the modulecmd will default to
 something, but likely not what is wanted.  To facilitate this, we define
 the Tcl procedure ``LoadedCompilerMatches``:
 
-.. include:: ../../example/compiler-etc-dependencies/tcllib/LoadedCompMatches.tcl
+.. include:: ../../example/hierarchical-modules/tcllib/LoadedCompMatches.tcl
     :literal:
 
 The procedure takes a string for the family and version of the compiler
@@ -932,7 +932,7 @@ the ``prereq``, causing module loads to fail).
 The resulting modulefile for something depending only on the compiler,
 using mvapich as an example, then would look like:
 
-.. include:: ../../example/compiler-etc-dependencies/modulerc/mvapich/common
+.. include:: ../../example/hierarchical-modules/modulerc/mvapich/common
     :literal:
 
 Basically, the modulefile knows what compiler it wants (in the above example,
@@ -953,7 +953,7 @@ modulefile then defines some Tcl variables for the version of mvapich
 and the compiler family/version, and sources the ``common`` file above.
 E.g., for ``mvapich/2.3.1/intel/2019``, the stubfile would look like
 
-.. include:: ../../example/compiler-etc-dependencies/modulerc/mvapich/2.3.1/intel/2019
+.. include:: ../../example/hierarchical-modules/modulerc/mvapich/2.3.1/intel/2019
     :literal:
 
 So the mvapich directory in MODULEPATH would have a structure like
@@ -1083,14 +1083,14 @@ matches the name of a known package (like a compiler family), it uses
 the last component as the version.  Otherwise, the second component is
 assumed to be the version.  The code is as follows:
 
-.. include:: ../../example/compiler-etc-dependencies/tcllib/GetFamVer.tcl
+.. include:: ../../example/hierarchical-modules/tcllib/GetFamVer.tcl
     :literal:
 
 Similarly, there are two corresponding .modulerc scripts for defaulting 
 the MPI library: one to default the family (e.g. openmpi, mvapich, intelmpi) 
 and one to default the version.  The family version, shown below:
 
-.. include:: ../../example/compiler-etc-dependencies/modrc_common/modulerc.select_mpi_family
+.. include:: ../../example/hierarchical-modules/modrc_common/modulerc.select_mpi_family
     :literal:
 
 is similar to the corresponding compiler version, but contains additional
@@ -1105,7 +1105,7 @@ or modulefile named nompi if it exists.
 The ``modulerc.select_mpi_version`` script is also similar to its compiler
 counterpart,
 
-.. include:: ../../example/compiler-etc-dependencies/modrc_common/modulerc.select_mpi_version
+.. include:: ../../example/hierarchical-modules/modrc_common/modulerc.select_mpi_version
     :literal:
 
 It checks if any MPI library was explicitly loaded, and if so it checks
@@ -1275,7 +1275,7 @@ and so will have a structure like the one described below for foo
 
 The common code of the modulefile is fairly standard, as shown below
 
-.. include:: ../../example/compiler-etc-dependencies/modulerc/foo/common
+.. include:: ../../example/hierarchical-modules/modulerc/foo/common
     :literal:
 
 The main difference from a standard modulefile is the inclusion of the
@@ -1284,7 +1284,7 @@ is needed to ensure that the compiler and MPI for the modulefile being
 processed are compatible with any which are loaded.  The ``LoadedMpiMatches``
 procedure is defined by:
 
-.. include:: ../../example/compiler-etc-dependencies/tcllib/LoadedMpiMatches.tcl
+.. include:: ../../example/hierarchical-modules/tcllib/LoadedMpiMatches.tcl
     :literal:
 
 Basically, it determines what if any MPI library was previously module loaded.
@@ -1379,7 +1379,7 @@ simd specified.
 
 The ``modulerc.default_lowest_simd`` script looks like:
 
-.. include:: ../../example/compiler-etc-dependencies/modrc_common/modulerc.default_lowest_simd
+.. include:: ../../example/hierarchical-modules/modrc_common/modulerc.default_lowest_simd
     :literal:
 
 It will default to the lowest SIMD level, but could easily be adapted to
@@ -1393,14 +1393,14 @@ To use the examples, you must
 #. Set (and export) MOD_GIT_ROOTDIR to where you git-cloned the modules source
 #. Do a ``module purge`` 
 #. If using Environmental Modules 3.x, set your MODULEPATH 
-   to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulerc3``
+   to ``$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/modulerc3``
 #. If using Environmental Modules 4.x, set your MODULEPATH 
-   to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulerc4``
+   to ``$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/modulerc4``
 
 As with the previous cases, we start with a ``module avail`` command, and here 
 we see the first big difference:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/modavail.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/modavail.out
     :literal:
 
 Unlike the previous cases wherein only package names and versions were shown
@@ -1419,7 +1419,7 @@ presentation of more rather than less information.
 The standard functionality of selecting the correct build of a package
 based on the loaded compiler, e.g.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/ompi-loads1.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/ompi-loads1.out
     :literal:
 
 works as expected.  The only significant difference between the previously
@@ -1440,12 +1440,12 @@ automatic module handling (i.e. for older Environmental Modules or without
 the --auto flag), the dependent modules remain loaded and there is inconsistency
 in the loaded modules.  But at least module list clearly shows such.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/ompi-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/ompi-switch.out
     :literal:
 
 The defaulting of modules is more successful, however, as seen below:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/ompi-defaults.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/ompi-defaults.out
     :literal:
 
 Here it not only defaults to the default compiler, but if one tries to load
@@ -1454,7 +1454,7 @@ compatible with the loaded compiler.
 
 The situation is similar for foo:
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-loads.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/foo-loads.out
     :literal:
 
 As expected, the correct version of foo is loaded depending on the previously
@@ -1473,7 +1473,7 @@ reported and the dependent modules will be unloaded; without it the dependent
 modules will not get unloaded, and there will be inconsistent dependencies
 (but at least module list will show such).
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/foo-switch.out
     :literal:
 
 The behavior when defaulting is nicer.  Without any compiler or MPI libraries
@@ -1490,7 +1490,7 @@ intelmpi modulefile is used to allow one to indicate that the Intel MPI library
 is desired.  The automatic module handling can again allow the switch 
 functionality work properly, as in
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-switch.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/foo-switch.out
     :literal:
 
 Here we note a deficiency in the switch support as compared to ``Flavours``.  In the last example
@@ -1500,7 +1500,7 @@ by the output of the fake foo command.  I.e., the foo package was *not* automati
 there was no prereq in the foo modulefile on an MPI library (as in the non-MPI build there is no MPI
 library to prereq).  Also note that module list does not really inform one of this fact.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-defaults.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/foo-defaults.out
     :literal:
 
 The situation with bar is similar.  We do not have a dummy simd module,
@@ -1509,12 +1509,12 @@ appending /avx, etc. to the bar package name.  As with previous strategies,
 if one attempts to load a simd variant which was not built for the compiler
 loaded, an error will occur.
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/bar-loads.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/bar-loads.out
     :literal:
 
 Defaulting is handled well, as shown
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/bar-defaults.out
+.. include:: ../../example/hierarchical-modules/example-sessions/modulerc/modules4.3.1/bar-defaults.out
     :literal:
 
 In particular, one case specify bar/avx2 or bar/avx or bar/sse4.1 and the
@@ -1604,7 +1604,7 @@ structure would look like:
 
 A typical common file for the gcc compiler would be something like
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/Core/gcc/common
+.. include:: ../../example/hierarchical-modules/example-sessions/modulepath/Core/gcc/common
     :literal:
 
 The most interesting aspect is the ``module use`` at the end.  We add
