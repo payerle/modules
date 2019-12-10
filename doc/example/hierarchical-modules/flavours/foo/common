@@ -32,7 +32,7 @@ flavours conflict foo
 # The reference to the environmental variable is a hack
 # for this example; normally one would hard code a path
 set rootdir $::env(MOD_GIT_ROOTDIR)
-set swroot $rootdir/doc/example/hierarchical-modules/fake-sw-root
+set swroot $rootdir/doc/example/compiler-etc-dependencies/fake-sw-root
 
 flavours root     $swroot/foo/$version
 flavours revision 1

@@ -37,7 +37,7 @@ prereq intel
 #Add the proper modulepath
 #In production this should be hard-coded, but using $gitroot for cookbook
 set gitroot $::env(MOD_GIT_ROOTDIR)
-set modpathroot $gitroot/doc/example/hierarchical-modules/modulepath
+set modpathroot $gitroot/doc/example/compiler-etc-dependencies/modulepath
 set newmodpath $modpathroot/CompilerMPI/$compilerTag/intelmpi/$version
 module use $newmodpath
 

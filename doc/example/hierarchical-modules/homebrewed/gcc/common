@@ -1,4 +1,4 @@
-## Example modulefiles for hierarchical-modules cookbook
+## Example modulefiles for compiler-etc-dependency cookbook
 ##
 ## Common stuff for gcc
 ##
@@ -24,7 +24,7 @@ module-whatis "Fake Gnu $version for cookbook"
 #Find the software root.  In production, you should 
 #hardcode to your real software root
 set gitroot $::env(MOD_GIT_ROOTDIR)
-set swroot $gitroot/doc/example/hierarchical-modules/fake-sw-root
+set swroot $gitroot/doc/example/compiler-etc-dependencies/fake-sw-root
 
 set pkgroot $swroot/gcc
 set vroot $pkgroot/$version

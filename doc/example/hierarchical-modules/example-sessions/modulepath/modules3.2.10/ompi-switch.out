@@ -10,6 +10,6 @@ mod3.2.10 (modulepath)> module switch pgi intel/2019
 mod3.2.10 (modulepath)> module list
 Currently Loaded Modulefiles:
   1) intel/2019
-  2) $MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/modulepath/Compiler/pgi/19.4/openmpi/4.0
+  2) $MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulepath/Compiler/pgi/19.4/openmpi/4.0
 mod3.2.10 (modulepath)> mpirun
 This is fake mpirun (openmpi/4.0, pgi/19.4)

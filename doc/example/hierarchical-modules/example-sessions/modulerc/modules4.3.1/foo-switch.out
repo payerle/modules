@@ -4,8 +4,7 @@ mod4.3.1 (modulerc)> module load openmpi/3.1
 mod4.3.1 (modulerc)> module load foo/1.1
 mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
- 1) pgi/18.4                        3) foo/1.1/pgi/18.4/openmpi/3.1(default)  
- 2) openmpi/3.1/pgi/18.4(default)  
+ 1) pgi/18.4   2) openmpi/3.1/pgi/18.4(default)   3) foo/1.1/pgi/18.4/openmpi/3.1(default)  
 mod4.3.1 (modulerc)> foo
 This is fake foo 1.1 (pgi/18.4, openmpi/3.1)
 mod4.3.1 (modulerc)> module switch --auto pgi intel/2018
@@ -49,9 +48,9 @@ mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) intel/2018  
 mod4.3.1 (modulerc)> foo
-$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/example-sessions/common_code.sh: line 35: foo: command not found
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/common_code.sh: line 35: foo: command not found
 mod4.3.1 (modulerc)> mpirun
-$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/example-sessions/common_code.sh: line 35: mpirun: command not found
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/common_code.sh: line 35: mpirun: command not found
 mod4.3.1 (modulerc)> module purge
 mod4.3.1 (modulerc)> module load intel/2019
 mod4.3.1 (modulerc)> module load foo
@@ -62,10 +61,10 @@ mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) intel/2019  
 mod4.3.1 (modulerc)> foo
-$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/example-sessions/common_code.sh: line 35: foo: command not found
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/common_code.sh: line 35: foo: command not found
 mod4.3.1 (modulerc)> module load openmpi
 mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) intel/2019   2) openmpi/intel/2019/4.0  
 mod4.3.1 (modulerc)> foo
-$MOD_GIT_ROOTDIR/doc/example/hierarchical-modules/example-sessions/common_code.sh: line 35: foo: command not found
+$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/example-sessions/common_code.sh: line 35: foo: command not found
