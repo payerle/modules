@@ -15,6 +15,7 @@ package require flavours
 flavours init
 
 proc ModulesHelp { } {
+   global version
    puts stderr "
 openmpi: Test/fake version of OpenMPI $version
 

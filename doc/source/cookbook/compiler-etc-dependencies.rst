@@ -5,7 +5,7 @@ Handling Compiler and other Package Dependencies
 ================================================
 
 When creating a collection of software (applications and libraries)
-for users to use, there is a problem of ensuring that the
+for users to use, there is the problem of ensuring that the
 user is using the correct builds of everything.  Generally,
 if an user is attempting to compile code making use of the system
 software collection, you want to ensure that the user is compiling
@@ -13,7 +13,7 @@ his code with the same compiler that was used to compile the library.
 This tends to be particularly true of C++ and Fortran code using modules,
 and parallel codes using MPI libraries.
 
-As a result, in environemnts supporting multiple compilers,
+As a result, in environments supporting multiple compilers,
 software libraries often end up with multiple installs of libraries
 and applications of the same version, depending on the compiler
 and other libraries used to build them.  Sometimes there are 
@@ -24,58 +24,82 @@ to support all these different builds for each package.
 
 For each strategy, we will provide an overview of how it works,
 and then show how an user might interact with it, usually a similar 
-sequence for each case.  
-We then try to summarize the strengths, weaknesses, and other attributes of each strategy.  We also try to
-discuss differences in using on older (3.x) and newer (4.x) Environmental
-Modules versions.
+sequence for each case.  We wish to explore how, and how well, each strategy
+succeeds in handling the multiple builds of the same version of a package,
+including
+
+#. Basic dependency handling: seeing how well the strategy supports 
+   the loading of the correct build of a package depending on the previously
+   loaded dependencies.  And if no appropriate build is available, they should
+   error accordingly.
+#. The ``module switch`` command and more advanced dependency handling: how
+   well the strategy supports more advanced cases.  E.g. a case wherein several 
+   modules are loaded and the user replaces a module upon which other modules
+   currently loaded depend.  In general, how well the strategy prevents the
+   user's set of loaded modules from being incompatible.
+#. Visibility into what packages are available.  This includes being able
+   to readily see all of the packages installed, seeing what versions of packages
+   are available for a given compiler/MPI/etc combination, and seeing for
+   which compiler/MPI/etc combinations a specific version of a package is available.
+#. How easily the user can navigate the modules for the builds.  This 
+   includes how well partial modulenames (e.g. omitting version, etc) are
+   handled by the different strategies.
+
+We then try to summarize the strengths, weaknesses, and other attributes of 
+each strategy.  We also try to discuss differences in using on older (3.x) 
+and newer (4.x) Environmental Modules versions.
 
 In addition to displaying examples for each strategy in this
 document, we have set up a the test environment as a playground in
-which you can explore.  As the examples are a bit more elaborate
-than in some other cookbooks, and as they make use of the same modulefile
-names, the examples for the different strategies do not play well
-with each other.  So each strategy has its own modulefile tree underneath
-``doc/example/compiler-etc-dependencies``.  Furthermore, we use some 
-modulefile names (e.g. gcc,
-intel, pgi, openmpi, etc) that likely are present on your system as well,
-so your production environment might interfere with the examples as
-well.  It is therefore recommended
-that you spawn a new shell, do a ``module purge``, and then set
-your ``MODULEPATH`` environmental variable to the appropriate path
-for example modulefiles for the strategy that you wish to explore.
+which you can explore.  
 
-Some of the modulefiles, etc. require knowledge of where they were
-installed.  To avoid requiring you to update lines in numerous
-files, we require you to set the environmental variable
-``MOD_GIT_ROOTDIR`` to location where the modules git working directory
-was cloned.  E.g., if you issued the command 
-``module clone  https://github.com/cea-hpc/modules.git ~/modules.test``
-you should set ``MOD_GIT_ROOTDIR`` to ``~/modules.test``.  Please
-ensure it is exported (use ``setenv`` in csh and related shells,
-or ``export`` in Bourne derived shells like bash).  This is just
-a hack to make the examples work better; if you opt to use one of
-these strategies in production, you will want to hard code some
-relevant paths; the comments in the modulefiles will describe
-what needs to be done.
+--------
+Contents
+--------
 
-As there are a fair number of modulefiles, we make use of various tricks
-in the cookbook ``Tips for Code Reuse`` to minimize the amount of repeated
-code.  In general, the actual modulefiles are small "stubfiles", setting one or a few
-Tcl variables, and then sourcing a ``common`` tcl file which does all the
-real work.   Symlinks are used where possible to avoid duplicating files.
-We also in some cases use Tcl procedures; for the sake of the
-examples these our sourced in the files as needed, but if one were to
-use the strategies needing such in production it would be better to follow
-the suggestions in ``Exposing Procedures and Variables to Modulefiles`` and
-place the required procedures in site config script.
+#.  `Overview of Examples`_
+#. `Flavours Strategy`_
+#. `Home-brewed Flavors Strategy`_
+#. `Modulerc-based Strategy`_
+#. `Modulepath-based Strategy`_
+#. `Comparison of Strategies`_
+
+
+.. _`Overview of Examples`:
 
 --------------------
 Overview of Examples
 --------------------
 
-For the example cases, we make use of the example software library
-(located at ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/fake-sw-root``)
-consisting of
+The examples are a bit more elaborate than in some other cookbooks, so
+the directory structure under ``doc/example/compiler-etc-dependencies``
+is similarly more complicated.  
+
+Example Software Library
+------------------------
+
+For the purpose of the examples and the playground, we have created
+a fake example software library, rooted at the subdirectory 
+``doc/example/compiler-etc-dependencies/fake-sw-root`` beneath where
+you placed the modules source files.  This software tree is intended
+to represent some of the features you might see in a real software 
+tree, which supports various compiler and MPI libraries, and  that has 
+been added to over time, and not always in the most systematic way.
+
+The example software library does not contain any real code; there are 
+dummy scripts for e.g. ``gcc``, ``mpirun``, etc.  which just echo then 
+name of the code and what version, compiler, etc. it was supposed to be
+built for, which is handy to show in the examples that the modulefiles
+are working as expected.  It also shows how such a directory tree might
+be laid out --- the details of the layout will affect some of the code
+in the modulefiles, etc.  The directory structure can be altered to
+fit your standards, but would require some minor modification to the
+modulefiles, etc.
+Note that there are also a bunch of subdirectories named ``1`` 
+containing symlinks, these are for the strategy using the Flavours add-on and are
+discussed in that section.
+
+The software in the example software library consists of:
 
   * GNU compiler versions 8.2.0 and 9.1.0
   * Intel Parallel Studio suite, versions 2018 and 2019. 
@@ -155,21 +179,96 @@ and MPI (for pgi it only supports the latest compiler and older openmpi), and th
 older version *mostly* has builds for the older compiler and MPI.  The bar application
 depends on compiler and has variants depending on size of integers used in the API.
 
-The ``fake-sw-root`` tree does not contain any real code (there are dummy scripts
-for e.g. ``gcc``, ``mpirun``, etc.  that just echo then name of the code and what
-compiler, etc. it was supposed to be built for) but show how such a directory tree might
-be laid out.  Note that there are also a bunch of subdirectories named ``1`` 
-containing symlinks, these are for the strategy using the Flavours add-on and are
-discussed there.
-
 We also assume that the gcc/8.2.0 compiler is the system default; i.e. it is
 the compiler provided by default by the Linux distro used by the system, and
 therefore might potentially be available to users without loading any modules.
 
+More directories under doc/example/compiler-etc-dependencies
+------------------------------------------------------------
 
---------
-Flavours
---------
+The modulefiles for the different strategies do not play well with each
+other, in part because we use the same names for many of the modules
+between strategies.  So in addition to the ``fake-sw-root`` subdirectory,
+each strategy has its own modulepath tree subdirectory
+underneath ``doc/example/compiler-etc-dependencies``.  There are some minor
+differences between the modulefiles for the Modulerc-based strategy
+depending on whether Environmental Modules 3.x or 4.x is being used,
+so we actually have two trees for that case (modulerc3 and modulerc4).
+
+As there are a fair number of modulefiles, we make use of various tricks
+in the cookbook `Tips for Code Reuse <tips-for-code-reuse_>`__ 
+to minimize the amount of repeated
+code.  In general, the actual modulefiles are small "stubfiles", setting one or a few
+Tcl variables, and then sourcing a ``common`` tcl file which does all the
+real work.   Symlinks are used where possible to avoid duplicating files.
+The Modulerc-based strategy also uses some complicated .modulerc files; these
+are fairly generic and to avoid redundancy are symlinked into the appropriate 
+places in modulepath tree from the ``modrc_common`` directory.
+
+We also in some cases use Tcl procedures; for the sake of the
+examples these our sourced in the files as needed, but if one were to
+use the strategies needing such in production it would be better to follow
+the suggestions in 
+`Expose Procedures and Variables to Modulefiles <expose-procs-to-modulefiles_>`__ and
+place the required procedures in site config script.  
+The various tcl procedures are placed in the ``tcllib`` sub-directory, outside
+of the modulepaths.  These are actually broken up into multiple files
+for the purpose of this cookbook (so that smaller chunks of code can be
+looked at in this document).
+
+The ``example-sessions`` subdirectory contains various shell scripts
+used for the usage examples for each strategy (shell scripts are used 
+because there are some slight variations required between the strategies),
+as well as the outputs of running such scripts.  Subdirectories exist
+for each strategy, and beneath them for each of the two Environmental 
+Modules versions (3.2.10 and 4.3.1) used; for brevity not all of them
+are shown in this document, especially as the 3.x and 4.x differences
+are often small.  In the example outputs, the Environmental Modules
+version and the strategy being employed is indicated in the shell prompt
+(e.g. ``mod3.2.10-flavours`` or ``mod4.3.1 (modulerc)``).
+
+
+Using the playground environments
+---------------------------------
+
+Although we strive to provide a decent discussion in this cookbook,
+you are encouraged to try things out in the playground in order to
+get a better feel for things.  
+
+Because we use some modulefile names (e.g. gcc, intel, pgi, openmpi, etc) 
+that likely are present on your system as well, it is recommended
+that if you wish to explore the playground environment that you
+spawn a new shell, do a ``module purge``, and then set your ``MODULEPATH``
+environmental variable appropriately for the specific strategy.
+
+The Flavours strategy, as will be discussed, requires some modifications
+to your Environmental Modules installation.  It is recommended that
+you you make a copy or new installation (for Flavours, a 3.x install
+works best), and then spawn a new shell and initialize the new Flavours
+install in that first.  Flavours code is not provided with this cookbook.
+
+Some of the modulefiles, etc. require knowledge of where they were
+installed.  To avoid requiring you to update lines in numerous
+files, we require you to set the environmental variable
+``MOD_GIT_ROOTDIR`` to location where the modules git working directory
+was cloned.  E.g., if you issued the command 
+``module clone  https://github.com/cea-hpc/modules.git ~/modules.test``
+you should set ``MOD_GIT_ROOTDIR`` to ``~/modules.test``.  Please
+ensure it is exported (use ``setenv`` in csh and related shells,
+or ``export`` in Bourne derived shells like bash).  This is just
+a hack to make the examples work better; if you opt to use one of
+these strategies in production, you will want to hard code some
+relevant paths; the comments in the modulefiles will describe
+what needs to be done.
+
+Some more detail on setting up the playground is given at the
+start of the Examples section for each strategy.
+
+.. _Flavours Strategy:
+
+-----------------
+Flavours Strategy
+-----------------
 
 The ``Flavours`` strategy uses the ``Flavours`` extension to Tcl Environmental
 Modules from Mark Dixon at the University of Leeds.  The code is available
@@ -185,7 +284,9 @@ you basically just need to:
 
 #. Clone the git repo somewhere (``git clone https://git.code.sf.net/p/flavours/code flavours-code``)
 #. Rename the standard Environmental Modules ``modulecmd`` file (in the ``bin`` subdirectory
-   under the installation root) to ``modulecmd.wrapped``.
+   under the installation root) to ``modulecmd.wrapped``. (It is recommended that you do this
+   in a copy of your production installation, or better yet, in a new install of the 3.x Environmental
+   Modules (as Flavours works best with 3.x))
 #. Copy the ``modulecmd.wrapper`` file from Flavours to the ``bin`` subdirectory above.  Make sure
    the ``modulecmd.wrapper`` file is executable.
 #. Symlink ``modulecmd.wrapper`` to ``modulecmd``
@@ -222,7 +323,7 @@ commands:
    I believe this is responsible for taking all those values to above and constructing the
    path to the package.
 *  ``flavours path``: This returns a string with the path to the specific build of the package.
-*  ``flavours prepend-path`, ``flavour append-path``:  These work much like the standard
+*  ``flavours prepend-path``, ``flavour append-path``:  These work much like the standard
    ``prepend-path`` and ``append-path``, except that the value being prepended/appended
    to the environmental variable has the path (as returned by ``flavours path``) prepended
    to it with the appropriate directory separator.  E.g., to add to the PATH variable the bin subdirectory
@@ -233,7 +334,7 @@ commands:
 
 The ``flavours prereq`` command accepts the new ``-class`` parameter, allowing
 it to require a class of packages; e.g. one could use ``-class compiler`` to indicate
-that it has a prereq on a compiler (any of classes ``gnu``, ``intel``, or ``pgi``).
+that it has a prereq on a compiler (any of the modules ``gnu``, ``intel``, or ``pgi``).
 The allowable classes, and the package basenames that are in each class, is defined in
 ``flavours.tcl`` in the Tcl associative array ``_class``.  The ones shipped by default are
 
@@ -291,6 +392,7 @@ you must
 We start with the ``module avail`` command:
 
 .. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules4.3.1/modavail.out
+    :literal:
 
 We note that we only see the package names and versions; e.g. foo/2.4, without any mention
 of the compilers and MPI libraries for which it is built.  This terser stype was an intentional
@@ -341,7 +443,8 @@ same three ``flavours`` lines as the simd modulefile: ``package require flavours
 ``flavours init``, and ``flavours cleanup``.  These are required to
 ensure dependent modulefiles get reloaded if the compiler is switched out.
 We also note that the modulefile for the GNU Compiler Collection is referred to as ``gnu``, not ``gcc`` 
-(this is due to how the ``compiler`` class is defined in ``flavours.tcl``).
+(this is due to how the ``compiler`` class is defined in ``flavours.tcl``, and we did not bother
+to change that for the purposes of this cookbook).
 
 With the openmpi and mvapich MPI libraries, things start to get interesting.  These all
 should setup the environment for a different build depending on the compiler loaded.  The
@@ -370,7 +473,11 @@ The ``flavours path`` command in the ``setenv MPI_DIR`` statement sets MPI_DIR t
 build path.  The ``flavours prepend-path`` commands prepend to the environmental variable specified
 by the first argument the result of prepending the ``flavours path`` to their second argument.  E.g.,
 the first such, assuming openmpi version 4.0 was requested and gnu/9.1.0 loaded, would be basically
-the same as a standard Modules ``prepend-path PATH $swroot/openmpi/4.0/1/gnu-9.1.0/bin`` command.
+the same as a standard Modules ::
+
+  prepend-path PATH $swroot/openmpi/4.0/1/gnu-9.1.0/bin 
+
+command.
 
 The following shows how this would appear to the user:
 
@@ -398,7 +505,15 @@ automatically "unloaded" and "reloaded" the openmpi module.  This happens in
 the ``flavours cleanup`` portion of the compiler modulefiles, and is due to
 ``openmpi`` declaring a ``flavours prereq`` on the compiler class.
 **NOTE**: The above behavior with switch was done with version 3.2.10
-of Environmental Modules; it does not* appear to work with 4.3.1. 
+of Environmental Modules; it does *not* appear to work with 4.3.1. 
+Note that when we further tried to replace version 2019 of the intel compiler with the 2018 version,
+the module switch of the compilers failed because openmpi/4.0 was not built with
+intel/2018.  Since the user never explicitly requested version 4.0 of openmpi (it was
+defaulted in the initial load as the latest version of openmpi available for pgi/19.4),
+it would have been nicer had the attempted reload of openmpi allowed it to default to the 3.1
+version (as the latest version available for intel/2018).  Nevertheless, it behaved well
+in this situation; the module switch failed with a reasonable error message and the resulting
+set of modules was still consistent.
 
 We also note that if we attempt to load openmpi without having previously loading a compiler,
 we will get an error:
@@ -407,7 +522,8 @@ we will get an error:
     :literal:
 
 In particular, there is no support for a "default" compiler; if e.g. you wished to make the
-distribution supply gcc a default, you will need to do a module load of that compiler (possibly
+distribution supplied gcc the default compiler, you will need to have the initializations 
+scripts automatically do  a module load of that compiler (possibly
 a dummy modulefile like simd/intelmpi if the compiler is already in the user's path)
 in your user's start up dot files or similar.  We also note that there is no additional 
 intelligence in the version defaulting --- in the last example, we have gnu/8.2.0 loaded and if
@@ -452,7 +568,7 @@ library.
 .. include:: ../../example/compiler-etc-dependencies/example-sessions/flavours/modules3.2.10/foo-switch.out
     :literal:
 
-In particular note the final case, wherein we load intel/2019 and foo, getting the
+In particular note the final case, wherein we load intel/2019 then foo, and get the
 version of foo built without MPI. When we subsequently load openmpi, foo is reloaded
 to be the openmpi version (this is because the hooks to reload foo are in the ``flavours cleanup``
 part of the openmpi modulefile, and foo declared its optional dependency on MPI).
@@ -487,13 +603,11 @@ Summary of Flavours
 * The git repository appears to have been last updated in 2013; although I believe this means
   that it has not been updated for Environmental Modules 4.x, my (albeit minimal) experimentation
   indicates that it still works, with the exception of automatic reloading of a module if any of
-  the modules it depends on are switched.  (All the examples with a mod431-flavours prompt were
-  done using Environmental Modules 4.3.1 with flavours added; i.e. everything but the ones 
-  demonstrating the use of ``module switch`` on a compiler, etc. to show reload of the 
-  modulefiles depending on it).   However, the Flavours package does not appear to be actively supported.
-* The Flavours package fully supports the ``module switch`` syntax, with the switching
-  out of a dependency (e.g. a compiler) causing the reload of all modulefiles depending on it.
-  At least for Environmental Modules 3.x; I have not had success with that on 4.x.
+  the modules it depends on are switched.  
+  However, the Flavours package does not appear to be actively supported.
+* The Flavours package (using Environmental Modules 3.x) fully supports the ``module switch`` syntax, 
+  with the switching out of a dependency (e.g. a compiler) causing the reload of all modulefiles depending on it.
+  (I have not had success with this using Environmental Modules 4.x.)
 * The syntax for modulefiles is elegant, and one can easily extend the basic compiler dependency
   modulefile to add additional dependencies.  Even for packages/dummy packages that the Flavours
   extension knows nothing about (e.g. simd in the above example).
@@ -503,7 +617,8 @@ Summary of Flavours
 * The Flavours package will fail with an error message if user tries to load a package which was
   not built for the values of the depenency packages loaded.
 * The Flavours package will fail to load with an error message if any dependent package is not
-  already loaded.  In particular, it will not attempt to default these.
+  already loaded.  In particular, it will not attempt to default these.  So if such defaults are
+  desired, you will need to have initialization scripts automatically load the appropriate modules.
 * The Flavours package does not include any mechanism for more intelligent defaulting.  I.e., if an
   user requests to load a package without specifying the version desired, the version will be defaulted
   to the latest version (or whatever the ``.modulerc`` file specifies) without regard for which versions
@@ -512,9 +627,11 @@ Summary of Flavours
   such.
 
 
--------------------
-Home-brewed flavors
--------------------
+.. _Home-brewed Flavors Strategy:
+
+----------------------------
+Home-brewed Flavors Strategy
+----------------------------
 
 Although the "Flavours" extension described above has an elegance about it,
 one can achieve much of the same functionality in modulefiles using standard
@@ -530,7 +647,8 @@ to query what modules of a given type are loaded and to construct the path to th
 software package accordingly.  To avoid needless (and error prone) repetition of
 code, we collect these into several Tcl procedures of our own.  Ideally, these
 should be placed in a site configuration Tcl file and exposed to modulefiles
-as explained in the cookbook ``Exposing Procedures and Variables to Modulefiles``.
+as explained in the cookbook 
+`Expose Procedures and Variables to Modulefiles <expose-procs-to-modulefiles_>`__.
 However, to avoid the need for that in these examples, we instead have placed them
 into a file and use the ``MOD_GIT_ROOTDIR`` to locate and source that file in the
 relevant modulefiles.  (Actually, we have a single tcl file that is sourced both 
@@ -616,6 +734,22 @@ basic because we assume intelmpi is only available if an Intel compiler
 is loaded.  If one allowed for intelmpi with other compilers, it would 
 more closely resemble the other MPI libraries).
 
+We also define some Tcl procedures for generating warning and error messages, namely
+
+.. include:: ../../example/compiler-etc-dependencies/tcllib/WarningUtils.tcl
+    :literal:
+
+These procedures:
+
+* **PrintIfLoading**: will print supplied text to stderr only when in ``load`` mode
+* **PrintLoadInfo**: will print supplied text as informational text, but only when trying to load a module
+* **PrintLoadWarning**: will print supplied text as warning text, but only when trying to load a module
+* **PrintLoadError**: will print supplied text as error text and abort, but only when trying to load a module
+
+The gist of this is that we might wish to print errors if an user tries to 
+load an incompatible modulefile, but do not wish to print errors if they are merely
+doing a help, display, or whatis command.
+
 The interesting bit begins with the openmpi and mvapich modulefiles.  These
 both depend on the compiler, we show the main part of the openmpi modulefile
 below:
@@ -627,9 +761,9 @@ We begin by sourcing the ``common_utilities`` file which defined the previously
 described Tcl procedures.  Normally it is recommended that you put those
 procedures in a site config Tcl script and expose them to the modulefiles
 using the techniques described in the cookbook 
-``Exposing Procedures and Variables to Modulefiles``.  Even if you opt
-against that and decide to source a Tcl file, it is recommended to hard code
-the path.
+`Expose Procedures and Variables to Modulefiles <expose-procs-to-modulefiles_>`__.  
+Even if you opt against that and decide to source a Tcl file, it is recommended 
+to hard code the path.
 
 The next interesting bit comes when we set the local Tcl variable ``ctag``
 by calling the ``GetLoadedCompiler`` procedure.  We allow the procedure to
@@ -658,8 +792,9 @@ Examples
 We now look at the example modulefiles for the homebrewed flavors strategies.  
 To use the examples, you must
 #. Set (and export) MOD_GIT_ROOTDIR to where you git-cloned the modules source
-#. Do a ``module purge``, and then set your MODULEPATH 
-   to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/homebrewed
+#. Do a ``module purge``, and then set your MODULEPATH to::
+
+  $MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/homebrewed
 
 The ``homebrewed flavors`` strategy behaves much like the ``Flavours``
 strategy in practice.  The module avail command,
@@ -685,25 +820,43 @@ gcc/8.2.0), an error is generated.
 
 Unlike in ``Flavours``, we did not put any code in the modulefiles to cause
 dependent modulefiles to be reloaded if a module they depend on gets switched
-out.  However, the automated module handling in Environmental Modules 4.2.0
-does just that, so we can do something like:
-
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/ompi-switch.out
-    :literal:
-
-Note that we include the ``--auto`` option to the module command; the 
-automatic module handling is still *experimental* and disabled by default and
-this flag is one way to enable it.  If one were to run the switch without the
-automated module handling (i.e. an earlier version of modules or with the 
-option not enabled), the modulefile for the compiler will be switched out,
-but that for openmpi would not, leading to a mismatch, as indicated in the
-snippet below (using Environmental Modules 3.2.10):
+out.  However, starting with Environmental Modules 4.2.0, a feature called 
+automated module handling was added.  Without this feature, attempting to
+switch out a module upon which other modules depended could be problematic,
+as evidenced in this sequence below (using Environmental Modules 3.2.10 and
+so without automatic module handling):
 
 .. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules3.2.10/ompi-switch.out
     :literal:
 
-And the ``module list`` command really does not inform you of this (other than perhaps
-by the fact that the openmpi module is after the foo module).  We note that the modulefile is able to 
+Here we note that we were able to switch out the pgi compiler for the intel compiler,
+but the openmpi module was not reloaded and the environment is still set for openmpi
+compiled with the pgi compiler, and that this inconsistency is not readily determined
+from the module list command.  
+
+Environmental Modules 4.x, even with automatic module handling disabled, is better --- 
+in a command sequence as above the module switch from pgi to intel would fail due to the 
+prereq module.  However, with the automatic module handling enabled (this feature is 
+still *experimental* and disabled by default; we add the ``--auto`` flag to the module
+switch command as one way to enable it), things work much better, as evidenced below:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/homebrewed/modules4.3.1/ompi-switch.out
+    :literal:
+
+When we switch out the pgi compiler for the intel/2019 compiler, the openmpi
+module is automatically unloaded before the compiler switch and reload afterwards,
+so we end up with the correct build of openmpi for the newly loaded intel/2019
+compiler.  If one then switches out intel/2019 replacing it with intel/2018,
+the openmpi module is first unloaded, the compilers are switched, and as there
+is no openmpi/4.0 build for intel/2018, a warning is given and the openmpi module
+is left unloaded.  Since the user never specifically requested version 4.0 of openmpi
+(it was defaulted in the original module load of openmpi as that was the latest version
+available for pgi/19.4), it would have been nicer if on the switch of intel compiler
+versions the reload only attempted a ``module load openmpi`` instead of ``module load openmpi/4.0``,
+but nevertheless this well behaved.  The openmpi module is dropped with a warning and the
+user has a consistent set of modules loaded.
+
+We note that the modulefile is able to 
 default the compiler, so when we attempt to load openmpi without having
 previously loaded a compiler, as in
 
@@ -783,7 +936,8 @@ Summary of homebrewed flavors strategy
   which was not built for the values of the depenency packages loaded.
 * In general, a module will fail to load with an error message if any 
   dependent package is not already loaded.  However, it has a limited ability
-  for defaulting the compiler, etc.
+  for defaulting the compiler, etc.  One can also have initialization scripts
+  automatically load the "default" modules.
 * It does not include any mechanism for more intelligent defaulting.  I.e., if 
   an user requests to load a package without specifying the version desired, 
   the version will be defaulted to the latest version (or whatever 
@@ -792,8 +946,10 @@ Summary of homebrewed flavors strategy
   has loaded.
 
 
+.. _Modulerc-based Strategy:
+
 -----------------------
-Modulerc-based strategy
+Modulerc-based Strategy
 -----------------------
 
 The previous two strategies used additional code in the modulefile to
@@ -802,7 +958,7 @@ PATH, etc. accordingly.  The ``modulerc-based`` strategy instead uses
 ``.modulerc`` files to direct the module command to the proper modulefile
 depending on what compiler, etc. was previously loaded.  Because of
 this, there are a number of differences in behavior and what is seen
-by the user, most notably many more modulefiles.  Whether this is good
+by the user, most notably many, many more modulefiles.  Whether this is good
 or bad is a matter of taste.
 
 Implementation
@@ -815,12 +971,10 @@ uses the same Tcl procedures to default the modulefile which will be loaded.
 This implies that there is a distinct modulefile for every build of the package,
 and an immediate consequence is that this strategy has many more modulefiles
 than the others.  We make use of the techniques in the cookbook 
-``Tips for Code Reuse`` to reduce the total amount of code; the actual modulefiles
+`Tips for Code Reuse <tips-for-code-reuse_>`__ to reduce the total amount of code; the actual modulefiles
 for each build are typically small stubfiles defining a couple of Tcl variables
 and then sourcing a ``common`` script (unique to each package) which does all
-the real work.  The ``.modulerc`` files themselves are not trivial, but these
-can generally be written in a generic fashion, usable by multiple packages,
-and can just be symlinked to the appropriate locations.  
+the real work.  
 
 The modules will be named with components for the different dependencies,
 so the one for openmpi version 4.0 built with gcc version 9.1.0 would
@@ -828,10 +982,13 @@ be ``openmpi/4.0/gcc/9.1.0``; similarly the module for foo version 1.1
 built for pgi version 18.4 and mvapich 2.1 would be
 ``foo/1.1/pgi/18.4/mvapich/2.1``.  
 
+The ``.modulerc`` files themselves are not trivial, but these
+can generally be written in a generic fashion, usable by multiple packages,
+and can just be symlinked to the appropriate locations.  
 We define five such files which can be linked as ``.modulerc``:
 
-We define two such files which can be linked in the module tree
-at various places at ``.modulerc`` for defaulting the compiler.  One to
+Two of these files  can be linked in the module tree
+at various places as ``.modulerc`` for defaulting the compiler.  One to
 default to the family portion of the compiler (e.g. gcc, intel, or pgi),
 and one for the version.  For the family portion of the compiler, 
 we have the file ``modulerc.select_compiler_family`` as below:
@@ -844,18 +1001,19 @@ of the example for this cookbook this is done based on the MOD_GIT_ROOTDIR
 environmental variable.  If you were to use this in production, it is 
 recommended that the Tcl procedures be placed in a site configuration script
 and exposed to modulefiles via the techniques described in the cookbook
-``Exposing Procedures and Variables to Modulefiles``.  At the minimum, it is
+`Expose Procedures and Variables to Modulefiles <expose-procs-to-modulefiles_>`__.  
+At the minimum, it is
 recommended to hardcode the path to the ``common_utilities.tcl`` file.
 
 The modulerc script then determines the directory it is in using the
 Tcl variable ``ModulesCurrentModulefile``.  It then uses the
-``GetLoadedCompiler`` Tcl procedure (as was discussed in the section
+``GetLoadedCompiler`` Tcl procedure (which was discussed in the section
 on the ``homebrewed`` strategy.  We then parse the resulting module
 name into family and version pieces (we will discuss the procedure
 ``GetPackageFamilyVersion`` later; for now suffice to say it takes
 a module name and returns a Tcl list with family and version).
 
-We do some trickery to support either gcc or gnu as family names for
+We do some trickery to supportathe use of  either gcc or gnu as family names for
 the GNU compiler suite, and then see if there is a directory or modulefile
 underneath the directory containing the .modulerc file, and if so defaults
 to it.  For this purpose, we use the Tcl procedure ``FirstChildModuleInList``
@@ -932,11 +1090,11 @@ the ``prereq``, causing module loads to fail).
 The resulting modulefile for something depending only on the compiler,
 using mvapich as an example, then would look like:
 
-.. include:: ../../example/compiler-etc-dependencies/modulerc/mvapich/common
+.. include:: ../../example/compiler-etc-dependencies/modulerc4/mvapich/common
     :literal:
 
 Basically, the modulefile knows what compiler it wants (in the above example,
-that is set by the stubfile and passed as a Tcl variable into the common
+that is set by the stubfile and passed as the Tcl variable ``compilerTag`` into the common
 script above), and then calls the ``LoadedCompilerMatches`` procedure
 above to ensure the loaded compiler matches what the modulefile wants (and
 to load it if no compiler is loaded).
@@ -953,7 +1111,7 @@ modulefile then defines some Tcl variables for the version of mvapich
 and the compiler family/version, and sources the ``common`` file above.
 E.g., for ``mvapich/2.3.1/intel/2019``, the stubfile would look like
 
-.. include:: ../../example/compiler-etc-dependencies/modulerc/mvapich/2.3.1/intel/2019
+.. include:: ../../example/compiler-etc-dependencies/modulerc4/mvapich/2.3.1/intel/2019
     :literal:
 
 So the mvapich directory in MODULEPATH would have a structure like
@@ -971,9 +1129,9 @@ So the mvapich directory in MODULEPATH would have a structure like
 |      |  |  \|- 2018 (stub modulefile)
 |      |  |  \|- 2019 (stub modulefile)
 |      |  \|- pgi
-|      |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|      |     \|- 18.4 (stub modulefile)
-|      |     \|- 19.4 (stub modulefile)
+|      |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|      |  |  \|- 18.4 (stub modulefile)
+|      |  |  \|- 19.4 (stub modulefile)
 |      \|- 2.3.1
 |      |  \|- .modulerc (symlink to modulerc.select_compiler_family)
 |      |  \|- gcc
@@ -983,8 +1141,8 @@ So the mvapich directory in MODULEPATH would have a structure like
 |      |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |      |  |  \|- 2019 (stub modulefile)
 |      |  \|- pgi
-|      |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|      |     \|- 19.4 (stub modulefile)
+|      |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|      |  |  \|- 19.4 (stub modulefile)
 
 With this directory structure, an user can load a compiler and then
 module load a specific version of mvapich, and if a build of that version of
@@ -993,6 +1151,7 @@ and otherwise an error reported.  However, if the user module loads
 mvapich without specifying a version, it will simply default the version
 to the latest version of mvapich available, regardless of whether there
 is a build of that version of mvapich for the loaded compiler.  Ideally,
+we would like it so that 
 if one issues a module load of a package without specifying a version, it
 should load the latest version available that is compatible with any loaded
 compilers or other modules.  
@@ -1023,9 +1182,9 @@ directory tree will now look like:
 |      |  |  \|- 2018 (stub modulefile)
 |      |  |  \|- 2019 (stub modulefile)
 |      |  \|- pgi
-|      |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|      |     \|- 18.4 (stub modulefile)
-|      |     \|- 19.4 (stub modulefile)
+|      |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|      |  |  \|- 18.4 (stub modulefile)
+|      |  |  \|- 19.4 (stub modulefile)
 |      \|- 2.3.1
 |      |  \|- .modulerc (symlink to modulerc.select_compiler_family)
 |      |  \|- gcc
@@ -1035,29 +1194,29 @@ directory tree will now look like:
 |      |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |      |  |  \|- 2019 (stub modulefile)
 |      |  \|- pgi
-|      |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|      |     \|- 19.4 (stub modulefile)
+|      |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|      |  |  \|- 19.4 (stub modulefile)
 |      \|- gcc
 |      |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |      |  \|- 8.2.0
 |      |   | \|- 2.1 (symlink to ../../2.1/gcc/8.2.0 stub modulefile)
 |      |  \|- 9.1.0
-|      |     \|- 2.1 (symlink to ../../2.1/gcc/9.1.0 stub modulefile)
-|      |     \|- 2.3.1 (symlink to ../../2.3.1/gcc/9.1.0 stub modulefile)
+|      |  |  \|- 2.1 (symlink to ../../2.1/gcc/9.1.0 stub modulefile)
+|      |  |  \|- 2.3.1 (symlink to ../../2.3.1/gcc/9.1.0 stub modulefile)
 |      \|- intel
 |      |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |      |  \|- 2018
 |      |   | \|- 2.1 (symlink to ../../2.1/intel/2018 stub modulefile)
 |      |  \|- 2019
-|      |     \|- 2.1 (symlink to ../../2.1/intel/2019 stub modulefile)
-|      |     \|- 2.3.1 (symlink to ../../2.3.1/intel/2019 stub modulefile)
+|      |  |  \|- 2.1 (symlink to ../../2.1/intel/2019 stub modulefile)
+|      |  |  \|- 2.3.1 (symlink to ../../2.3.1/intel/2019 stub modulefile)
 |      \|- pgi
 |      |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |      |  \|- 18.4
 |      |   | \|- 2.1 (symlink to ../../2.1/pgi/18.4 stub modulefile)
 |      |  \|- 19.4
-|            \|- 2.1 (symlink to ../../2.1/pgi/19.4 stub modulefile)
-|            \|- 2.3.1 (symlink to ../../2.3.1/pgi/19.4 stub modulefile)
+|      |   | \|- 2.1 (symlink to ../../2.1/pgi/19.4 stub modulefile)
+|      |   | \|- 2.3.1 (symlink to ../../2.3.1/pgi/19.4 stub modulefile)
 |      |   | \|- 2.1 (symlink to ../../2.1/intel/2019 stub modulefile)
 |      |   | \|- 2.3.1 (symlink to ../../2.3.1/intel/2019 stub modulefile)
 
@@ -1070,13 +1229,27 @@ version of the loaded or defaulted compiler.  After descending into the
 compiler version directory, there is no .modulerc, so the standard modulecmd
 defaulting mechanism will select the latest version.
 
-So PACKAGE/PKGVERSION/COMPILER_FAMILY/COMPILER_VERSION and
-PACKAGE/COMPILER_FAMILY/COMPILER_VERSION/PKGVERSION refer to the same 
-modulefile and the same build.  E.g.  ``mvapich/2.3.1/pgi/19.4`` and 
-``mvapich/pgi/19.4/2.3.1`` both refer to version 2.3.1 of mvapich, built
-for version 19.4 of the PGI compiler suite.  In general, we allow for 
-modules to be named with multiple dependency packages and/or flags.
-This is the reason for the procedure ``GetPackageFamilyVersion`` ---
+We now have two ways to refer to the same build of mvapich, namely
+one using the traditional form ::
+
+  PACKAGE/PKGVERSION/COMPILER_FAMILY/COMPILER_VERSION 
+  (e.g. mvapich/2.3.1/pgi/19.4)
+
+and a new one giving the compiler family and version immediately
+after package name, with the version of the package coming last ::
+
+  PACKAGE/COMPILER_FAMILY/COMPILER_VERSION/PKGVERSION 
+  (e.g. mvapich/pgi/19.4/2.3.1)
+
+These both refer to the same build of the package (e.g. version 2.3.1
+of mvapich, built for version 19.4 of the PGI compiler suite).
+Indeed, through the judicious use of symlinks, these actually refer to the 
+modulefile on disk, but with two distinct names depending on the path
+used to get to it.  In general, we allow for 
+modules to be named with multiple dependency packages and/or flags if
+doing so would make it easier for a user to default to the correct package.
+
+This is the primary reason for the procedure ``GetPackageFamilyVersion`` ---
 it splits a module name into components and takes the first component
 as the family name.  It then examines the second component, and if it
 matches the name of a known package (like a compiler family), it uses
@@ -1130,70 +1303,70 @@ and so will have a structure like the one described below for foo
 |  |  \|- gcc
 |  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |  |  |  \|- 8.2.0 
-|  |  |       \|- .modulerc (symlink to modulerc.select_mpi_family)
-|  |  |       \|- nompi (stub modulefile)
-|  |  |       \|- mvapich
-|  |  |       |    \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |       |    \|- 2.1 (stub modulefile)
-|  |  |       \|- openmpi
-|  |  |            \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |            \|- 3.1 (stub modulefile)
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  |    \|- nompi (stub modulefile)
+|  |  |  |    \|- mvapich
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 2.1 (stub modulefile)
+|  |  |  |    \|- openmpi
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 3.1 (stub modulefile)
 |  |  \|- intel
 |  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |  |  |  \|- 2018
-|  |  |       \|- .modulerc (symlink to modulerc.select_mpi_family)
-|  |  |       \|- nompi (stub modulefile)
-|  |  |       \|- intelmpi (stub modulefile)
-|  |  |       \|- mvapich
-|  |  |       |    \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |       |    \|- 2.1 (stub modulefile)
-|  |  |       \|- openmpi
-|  |  |            \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |            \|- 3.1 (stub modulefile)
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  |    \|- nompi (stub modulefile)
+|  |  |  |    \|- intelmpi (stub modulefile)
+|  |  |  |    \|- mvapich
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 2.1 (stub modulefile)
+|  |  |  |    \|- openmpi
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 3.1 (stub modulefile)
 |  |  \|- pgi
-|  |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|  |     \|- 2018
-|  |          \|- .modulerc (symlink to modulerc.select_mpi_family)
-|  |          \|- nompi (stub modulefile)
-|  |          \|- mvapich
-|  |          |    \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |          |    \|- 2.1 (stub modulefile)
-|  |          \|- openmpi
-|  |               \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |               \|- 3.1 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|  |  |  \|- 2018
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  |    \|- nompi (stub modulefile)
+|  |  |  |    \|- mvapich
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 2.1 (stub modulefile)
+|  |  |  |    \|- openmpi
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 3.1 (stub modulefile)
 |  \|- 2.4
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_family)
 |  |  \|- gcc
 |  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |  |  |  \|- 9.1.0 
-|  |  |       \|- .modulerc (symlink to modulerc.select_mpi_family)
-|  |  |       \|- nompi (stub modulefile)
-|  |  |       \|- mvapich
-|  |  |       |    \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |       |    \|- 2.3.1 (stub modulefile)
-|  |  |       \|- openmpi
-|  |  |            \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |            \|- 4.0 (stub modulefile)
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  |    \|- nompi (stub modulefile)
+|  |  |  |    \|- mvapich
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 2.3.1 (stub modulefile)
+|  |  |  |    \|- openmpi
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 4.0 (stub modulefile)
 |  |  \|- intel
 |  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |  |  |  \|- 2019
-|  |  |       \|- .modulerc (symlink to modulerc.select_mpi_family)
-|  |  |       \|- nompi (stub modulefile)
-|  |  |       \|- intelmpi (stub modulefile)
-|  |  |       \|- mvapich
-|  |  |       |    \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |       |    \|- 2.3.1 (stub modulefile)
-|  |  |       \|- openmpi
-|  |  |            \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |            \|- 4.0 (stub modulefile)
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  |    \|- nompi (stub modulefile)
+|  |  |  |    \|- intelmpi (stub modulefile)
+|  |  |  |    \|- mvapich
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 2.3.1 (stub modulefile)
+|  |  |  |    \|- openmpi
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 4.0 (stub modulefile)
 |  |  \|- pgi
-|  |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|  |     \|- 19.4
-|  |          \|- .modulerc (symlink to modulerc.select_mpi_family)
-|  |          \|- nompi (stub modulefile)
-|  |          \|- openmpi
-|  |               \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |               \|- 3.1 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|  |  |  \|- 19.4
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  |    \|- nompi (stub modulefile)
+|  |  |  |    \|- openmpi
+|  |  |  |    |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    |    \|- 3.1 (stub modulefile)
 |  \|- gcc
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |  |  \|- 8.2.0
@@ -1201,25 +1374,25 @@ and so will have a structure like the one described below for foo
 |  |  |  \|- mvapich
 |  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
 |  |  |  |    \|- 2.1
-|  |  |  |         \|- 1.1 (stub modulefile)
+|  |  |  |    |    \|- 1.1 (stub modulefile)
 |  |  |  \|- nompi
 |  |  |  |    \|- 1.1 (stub modulefile)
 |  |  |  \|- openmpi
-|  |  |       \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |       \|- 3.1
-|  |  |            \|- 1.1 (stub modulefile)
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    \|- 3.1
+|  |  |  |    |    \|- 1.1 (stub modulefile)
 |  |  \|- 9.1.0
-|  |     \|- .modulerc (symlink to modulerc.select_mpi_family)
-|  |     \|- mvapich
-|  |     |    \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |     |    \|- 2.3.1
-|  |     |         \|- 2.4 (stub modulefile)
-|  |     \|- nompi
-|  |     |    \|- 2.4 (stub modulefile)
-|  |     \|- openmpi
-|  |          \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |          \|- 4.0
-|  |               \|- 2.4 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  \|- mvapich
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    \|- 2.3.1
+|  |  |  |    |    \|- 2.4 (stub modulefile)
+|  |  |  \|- nompi
+|  |  |  |    \|- 2.4 (stub modulefile)
+|  |  |  \|- openmpi
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    \|- 4.0
+|  |  |  |    |    \|- 2.4 (stub modulefile)
 |  \|- intel
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |  |  \|- 2018
@@ -1231,11 +1404,11 @@ and so will have a structure like the one described below for foo
 |  |  |  \|- mvapich
 |  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
 |  |  |  |    \|- 2.1
-|  |  |  |         \|- 1.1 (stub modulefile)
+|  |  |  |    |    \|- 1.1 (stub modulefile)
 |  |  |  \|- openmpi
-|  |  |       \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |  |       \|- 3.1
-|  |  |            \|- 1.1 (stub modulefile)
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    \|- 3.1
+|  |  |  |    |    \|- 1.1 (stub modulefile)
 |  |  \|- 2019
 |  |     \|- .modulerc (symlink to modulerc.select_mpi_family)
 |  |     \|- nompi
@@ -1245,37 +1418,70 @@ and so will have a structure like the one described below for foo
 |  |     \|- mvapich
 |  |     |    \|- .modulerc (symlink to modulerc.select_mpi_version)
 |  |     |    \|- 2.3.1
-|  |     |         \|- 2.4 (stub modulefile)
+|  |     |    |    \|- 2.4 (stub modulefile)
 |  |     \|- openmpi
-|  |          \|- .modulerc (symlink to modulerc.select_mpi_version)
-|  |          \|- 4.0
-|  |               \|- 2.4 (stub modulefile)
+|  |     |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |     |    \|- 4.0
+|  |     |    |    \|- 2.4 (stub modulefile)
 |  \|- pgi
-|     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|     \|- 18.4
-|     |  \|- .modulerc (symlink to modulerc.select_mpi_family)
-|     |  \|- mvapich
-|     |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
-|     |  |    \|- 2.1
-|     |  |         \|- 1.1 (stub modulefile)
-|     |  \|- nompi
-|     |  |    \|- 1.1 (stub modulefile)
-|     |  \|- openmpi
-|     |       \|- .modulerc (symlink to modulerc.select_mpi_version)
-|     |       \|- 3.1
-|     |            \|- 1.1 (stub modulefile)
-|     \|- 19.4
-|        \|- .modulerc (symlink to modulerc.select_mpi_family)
-|        \|- nompi
-|        |    \|- 2.4 (stub modulefile)
-|        \|- openmpi
-|             \|- .modulerc (symlink to modulerc.select_mpi_version)
-|             \|- 3.1
-|                  \|- 2.4 (stub modulefile)
+|  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|  |  \|- 18.4
+|  |  |  \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  \|- mvapich
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    \|- 2.1
+|  |  |  |    |    \|- 1.1 (stub modulefile)
+|  |  |  \|- nompi
+|  |  |  |    \|- 1.1 (stub modulefile)
+|  |  |  \|- openmpi
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    \|- 3.1
+|  |  |  |    |    \|- 1.1 (stub modulefile)
+|  |  \|- 19.4
+|  |  |  \|- .modulerc (symlink to modulerc.select_mpi_family)
+|  |  |  \|- nompi
+|  |  |  |    \|- 2.4 (stub modulefile)
+|  |  |  \|- openmpi
+|  |  |  |    \|- .modulerc (symlink to modulerc.select_mpi_version)
+|  |  |  |    \|- 3.1
+|  |  |  |    |    \|- 2.4 (stub modulefile)
+
+Although the directory tree above is somewhat lengthy, it is similar
+to the case for a module depending only on the compiler, but expanded
+to handle MPI dependencies as well.  There is a subdirectory under ``foo``
+for each version of foo.  Each of these subdirectories have further subdirectories
+for the compiler families for which that version of foo was built, and under
+the subdirectories for each compiler family are subdirectories for each version
+of that compiler family for which foo was built.  Underneath these
+are stub modulefiles for nompi (and for intel compilers, intelmpi) builds of
+the package, and subdirectories for each MPI family, containing stub modulefiles
+for each version of the MPI family the package was built for.  
+
+Additionally, there are subdirectories directly under ``foo`` for each compiler 
+family the package was built for, with each having subdirectories for the
+version of the compiler.  Beneath each of those are one or two more layers
+of subdirectories for the MPI family and version (the version layer is omitted
+in the nompi or intelmpi cases), underneath which are symlinks to the corresponding
+stub modulefile from the ``foo/FOOVERSION`` path.  
+
+By placing the appropriate .modulerc files (actually, symlinks to the correct
+modulerc file), when the user enters a partial modulename the modulecmd will
+descend this directory tree based on the previously loaded compiler and MPI
+library to get to correct build of the package, if it exists.  If no MPI library
+was previously loaded, it will search for an intelmpi build if an intel compiler
+was loaded, or a nompi build if no intelmpi build found or a non-intel compiler
+was used.  If only MPI builds were made, it will default (using standard
+module defaulting rules) to one of the MPI builds, and the appropriate MPI
+library will be loaded when the foo module gets loaded (via the ``LoadedMPIMatches``
+TCL procedure described below).  If a compiler and MPI library were loaded but no 
+build for that combination exists, again a modulefile will be defaulted to
+(using standard module defaulting rules), but an error will be generated by
+the one of the ``LoadedCompilerMatches`` or ``LoadedMPIMatches`` calls in the
+foo modulefile (see below).
 
 The common code of the modulefile is fairly standard, as shown below
 
-.. include:: ../../example/compiler-etc-dependencies/modulerc/foo/common
+.. include:: ../../example/compiler-etc-dependencies/modulerc4/foo/common
     :literal:
 
 The main difference from a standard modulefile is the inclusion of the
@@ -1311,19 +1517,19 @@ modulefile tree would look like:
 |  \|- 4.7
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_family)
 |  |  \|- gcc
-|  |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|  |     \|- 8.2.0 
-|  |          \|- .modulerc (symlink to modulerc.default_lowest_simd)
-|  |          \|- avx (stub modulefile)
-|  |          \|- sse4.1 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|  |  |  \|- 8.2.0 
+|  |  |  |    \|- .modulerc (symlink to modulerc.default_lowest_simd)
+|  |  |  |    \|- avx (stub modulefile)
+|  |  |  |    \|- sse4.1 (stub modulefile)
 |  \|- 5.4
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_family)
 |  |  \|- gcc
-|  |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|  |     \|- 9.1.0 
-|  |          \|- .modulerc (symlink to modulerc.default_lowest_simd)
-|  |          \|- avx (stub modulefile)
-|  |          \|- avx2 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|  |  |  \|- 9.1.0 
+|  |  |  |    \|- .modulerc (symlink to modulerc.default_lowest_simd)
+|  |  |  |    \|- avx (stub modulefile)
+|  |  |  |    \|- avx2 (stub modulefile)
 |  \|- gcc
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
 |  |  \|- 8.2.0
@@ -1333,31 +1539,31 @@ modulefile tree would look like:
 |  |  |  \|- sse4.1
 |  |  |       \|- 4.7 (stub modulefile)
 |  |  \|- 9.1.0
-|  |     \|- .modulerc (symlink to modulerc.default_lowest_simd)
-|  |     \|- avx
-|  |     |    \|- 5.4 (stub modulefile)
-|  |     \|- avx2
-|  |          \|- 5.4 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.default_lowest_simd)
+|  |  |  \|- avx
+|  |  |  |    \|- 5.4 (stub modulefile)
+|  |  |  \|- avx2
+|  |  |  |    \|- 5.4 (stub modulefile)
 |  \|- avx
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_family)
 |  |  \|- gcc
-|  |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|  |     \|- 8.2.0
-|  |     |    \|- 4.7 (stub modulefile)
-|  |     \|- 9.1.0 
-|  |          \|- 5.4 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|  |  |  \|- 8.2.0
+|  |  |  |    \|- 4.7 (stub modulefile)
+|  |  |  \|- 9.1.0 
+|  |  |  |    \|- 5.4 (stub modulefile)
 |  \|- avx2
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_family)
 |  |  \|- gcc
-|  |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|  |     \|- 9.1.0 
-|  |          \|- 5.4 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|  |  |  \|- 9.1.0 
+|  |  |  |    \|- 5.4 (stub modulefile)
 |  \|- sse4.1
 |  |  \|- .modulerc (symlink to modulerc.select_compiler_family)
 |  |  \|- gcc
-|  |     \|- .modulerc (symlink to modulerc.select_compiler_version)
-|  |     \|- 8.2.0 
-|  |          \|- 4.7 (stub modulefile)
+|  |  |  \|- .modulerc (symlink to modulerc.select_compiler_version)
+|  |  |  \|- 8.2.0 
+|  |  |  |    \|- 4.7 (stub modulefile)
 
 Here we added yet another alternate set of module names.  So the module
 for bar version 5.4 built with gcc version 9.1.0 and avx2 support can be
@@ -1388,14 +1594,20 @@ do something else.
 Examples
 --------
 
-We now look at the example modulefiles for the modulerc based strategies.  
-To use the examples, you must
+We now look at the example modulefiles for the modulerc based strategy.  
+As noted previously, the best choice of whether to set the ``requireIt`` flag
+to ``LoadedCompilerMatches`` and ``LoadedMPIMatches`` (instructing them to
+to a ``prereq`` on the requesting compiler/MPI module) depends on whether
+one is using a 3.x or 4.x version of Environmental Modules.  Due to this,
+we provide two modulefile trees, one for 3.x and one for 4.x; they are
+basicaly identical except for that matter.  This leads to slightly
+different instructions on how to use the examples, depending on which
+version of Environmental Modules is being used, namely:
+
 #. Set (and export) MOD_GIT_ROOTDIR to where you git-cloned the modules source
 #. Do a ``module purge`` 
-#. If using Environmental Modules 3.x, set your MODULEPATH 
-   to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulerc3``
-#. If using Environmental Modules 4.x, set your MODULEPATH 
-   to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulerc4``
+#. If using Environmental Modules 3.x, set your MODULEPATH to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulerc3``
+#. If using Environmental Modules 4.x, set your MODULEPATH to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulerc4``
 
 As with the previous cases, we start with a ``module avail`` command, and here 
 we see the first big difference:
@@ -1410,8 +1622,8 @@ Indeed, we not only see one such listing, but multiple listings per
 build in many cases (e.g. ``openmpi/3.1/intel/2018`` and
 ``openmpi/intel/2018/3.1``).  
 
-While admittedly the output of a  ``module avail`` command which does not 
-specify any package is rather overwhelming, when a package is specified
+While admittedly the output of a  ``module avail`` command without
+specifying any package is rather overwhelming, when a package is specified
 the output tends to be more reasonable, informing one of which builds
 of the package are available.  This strategy deliberately opts for the 
 presentation of more rather than less information.
@@ -1422,20 +1634,27 @@ based on the loaded compiler, e.g.
 .. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/ompi-loads1.out
     :literal:
 
-works as expected.  The only significant difference between the previously
+works as expected (and fails with the expected error when one attempts to
+load a module not compatible with the loaded compiler).  
+The only significant difference between the previously
 examined strategies is that the module list command provides information
 about what variant of each package is loaded.
 
 The ``module switch`` command, however, does not work as well as one would
 like.  While it indeeds switches the specified module, it does not 
 successfully reload the modules which depend on the replaced module, even
-with the automatic module handling feature enabled, as that feature attempts
-to reload the fully qualified module name, and will fail as the fully 
-qualified modulename includes the information about the dependencies.  It
+with the automatic module handling feature enabled.  As currently implemented,
+the automatic module handling feature attempts to reload dependent modules
+using the fully qualified module name, and as in this strategy the fully 
+qualified modulename includes the information about the module that was switched
+out (e.g. pgi/19.4 in the example below), it will be incompatible with the
+replacement module (e.g. intel/2019 in example below).  It
 is hoped a future version of modulecmd will allow for reloading based on the
 name specified when the module was loaded.  But as things currently stand,
 the automatic module handling will throw an error attempting to reload the
-depend module, resulting in the the dependent modules being unloaded.  Without
+depend module, resulting in the the dependent modules being unloaded.  
+
+Without
 automatic module handling (i.e. for older Environmental Modules or without
 the --auto flag), the dependent modules remain loaded and there is inconsistency
 in the loaded modules.  But at least module list clearly shows such.
@@ -1476,32 +1695,15 @@ modules will not get unloaded, and there will be inconsistent dependencies
 .. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-switch.out
     :literal:
 
-The behavior when defaulting is nicer.  Without any compiler or MPI libraries
-loaded, a simple ``module load foo`` will default the compiler to gcc/8.2.0
-and MPI to nompi, and find the latest version of foo for the those.  In 
-general, if the module is not fully specified, the various .modulerc files
-will attempt to default to the latest version of foo matching the specification
-and previously loaded compiler and/or MPI libraries.
-
-
-Again, one can load a compiler without an MPI library to get the non-MPI version
-of foo, or a compiler and MPI library to get the MPI version.  The dummy
-intelmpi modulefile is used to allow one to indicate that the Intel MPI library
-is desired.  The automatic module handling can again allow the switch 
-functionality work properly, as in
-
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-switch.out
-    :literal:
-
-Here we note a deficiency in the switch support as compared to ``Flavours``.  In the last example
-after loading intel/2019 and foo, we have the non-MPI build of foo as expected.  However, upon
-subsequently loading the openmpi module, we still have the non-MPI version of foo loaded, as evidenced
-by the output of the fake foo command.  I.e., the foo package was *not* automatically reloaded, as 
-there was no prereq in the foo modulefile on an MPI library (as in the non-MPI build there is no MPI
-library to prereq).  Also note that module list does not really inform one of this fact.
+The defaulting of modules works relatively well, as shown below:
 
 .. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-defaults.out
     :literal:
+
+If one attempts to load foo without specifying a version or having previously loaded a compiler
+module, the compiler will be defaulted (to gcc/8.2.0 compiler, as that is what
+we declared via the ``GetDefaultCompiler`` Tcl procedure), and the latest
+version of foo compatible with that compiler (and no MPI) will be loaded.
 
 The situation with bar is similar.  We do not have a dummy simd module,
 so the builds with different CPU vectorization support are specified by
@@ -1511,15 +1713,6 @@ loaded, an error will occur.
 
 .. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/bar-loads.out
     :literal:
-
-Defaulting is handled well, as shown
-
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/bar-defaults.out
-    :literal:
-
-In particular, one case specify bar/avx2 or bar/avx or bar/sse4.1 and the
-latest version of bar consistent with the specification and any previously
-loaded compiler (or default compiler) will be loaded
 
 Summary of modulerc strategy
 ----------------------------
@@ -1541,7 +1734,7 @@ Summary of modulerc strategy
   about what builds are available.  
 * Because each build has a specific module, the module list command shows
   exactly what builds of the various modules are loaded.
-* The module switch command does not work as well as one would like.  In
+* The module switch command does not work very well.  In
   particular, when one switches out a module on which other modules depend,
   the dependent modules are not successfully reloaded.  Even with the
   automated module handling feature (introduced in 4.2.0), the dependent
@@ -1558,17 +1751,19 @@ Summary of modulerc strategy
 * Modules will fail with an error message if user tries to load a package 
   which was not built for the values of the depenency packages loaded.
 
+.. _Modulepath-based Strategy:
+
 -------------------------
-Modulepath-based strategy
+Modulepath-based Strategy
 -------------------------
 
 This strategy makes use of the ability of modules to support multiple
-directories in the MODULEPATH setting.  Everytime a module is loaded 
+directories in the MODULEPATH environmental variable.  Everytime a module is loaded 
 on which other modules might depend, a new path is added to MODULEPATH
 containing the modulefiles which depend on the newly added module.
 
-This is basically the same strategy that is used in the hierarchical
-approach in Lua Modules (lmod).
+This is basically similar to the strategy that is used in the hierarchical
+modulefile approach in Lua Modules (lmod).
 
 Implementation
 --------------
@@ -1580,7 +1775,7 @@ modulefiles for modules which other modules might depend on.
 
 To begin with, we set MODULEPATH to a ``Core`` directory containing
 modulefiles for modules which do not depend on any other modules. 
-The modulefiles for the compilers will typically be put in here.
+The modulefiles for compilers will typically be put in here.
 For this example, we opt not to use a dummy simd module (for reasons
 explained later), but instead add avx, avx2, sse4.1 variants to the
 bar modules, but otherwise they might belong here.  Other modules which
@@ -1598,13 +1793,13 @@ structure would look like:
 |  |  \|- 2018 (stub modulefile)
 |  |  \|- 2019 (stub modulefile)
 |  \|- pgi
-|     \|- common (file containing common code for intel)
-|     \|- 18.4 (stub modulefile)
-|     \|- 19.4 (stub modulefile)
+|  |  \|- common (file containing common code for intel)
+|  |  \|- 18.4 (stub modulefile)
+|  |  \|- 19.4 (stub modulefile)
 
 A typical common file for the gcc compiler would be something like
 
-.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/Core/gcc/common
+.. include:: ../../example/compiler-etc-dependencies/modulepath/Core/gcc/common
     :literal:
 
 The most interesting aspect is the ``module use`` at the end.  We add
@@ -1614,7 +1809,7 @@ to MODULEPATH.
 
 In each of these compiler specific directories, modulefile directory
 trees exist for the supported MPI libraries and bar.  We also include
-a foo directory containing the nompi variants of foo.  It would look
+a foo directory containing the non-MPI variants of foo.  It would look
 like:
 
 |  Compiler
@@ -1622,59 +1817,731 @@ like:
 |  |  \|- 8.2.0 
 |  |  |    \|- bar
 |  |  |    |    \|- 4.7
-|  |  |    |         \|- .modulerc (symlink to modulerc.default_lowest_simd)
-|  |  |    |         \|- avx (stub modulefile for bar w gcc/8.2.0 and avx)
-|  |  |    |         \|- sse4.1 (stub modulefile for bar w gcc/8.2.0 and sse4.1)
+|  |  |    |    |    \|- .modulerc (symlink to modulerc.default_lowest_simd)
+|  |  |    |    |    \|- common (common code for bar) (actually a symlink to a ``common`` subdirectory)
+|  |  |    |    |    \|- avx (stub modulefile for bar w gcc/8.2.0 and avx)
+|  |  |    |    |    \|- sse4.1 (stub modulefile for bar w gcc/8.2.0 and sse4.1)
 |  |  |    \|- foo
-|  |  |    |    \|- common (common code for foo)
+|  |  |    |    \|- common (common code for foo) (actually a symlink to a ``common`` subdirectory)
 |  |  |    |    \|- 1.1 (stub modulefile for foo w gcc/8.2.0 and nompi)
 |  |  |    \|- mvapich
-|  |  |    |    \|- common (common code for mvapich)
+|  |  |    |    \|- common (common code for mvapich) (actually a symlink to a ``common`` subdirectory)
 |  |  |    |    \|- 2.1 (stub modulefile for mvapich 2.1 w gcc/8.2.0)
 |  |  |    \|- openmpi
-|  |  |         \|- common (common code for openmpi)
-|  |  |         \|- 3.1 (stub modulefile for openmpi 3.1 w gcc/8.2.0)
+|  |  |    |    \|- common (common code for openmpi) (actually a symlink to a ``common`` subdirectory)
+|  |  |    |    \|- 3.1 (stub modulefile for openmpi 3.1 w gcc/8.2.0)
 |  |  \|- 9.1.0 
 |  |  |    \|- bar
 |  |  |    |    \|- 5.4
-|  |  |    |         \|- .modulerc (symlink to modulerc.default_lowest_simd)
-|  |  |    |         \|- avx (stub modulefile for bar w gcc/9.1.0 and avx)
-|  |  |    |         \|- sse4.1 (stub modulefile for bar w gcc/9.1.0 and sse4.1)
+|  |  |    |    |    \|- .modulerc (symlink to modulerc.default_lowest_simd)
+|  |  |    |    |    \|- common (common code for bar) (actually a symlink to a ``common`` subdirectory)
+|  |  |    |    |    \|- avx (stub modulefile for bar w gcc/9.1.0 and avx)
+|  |  |    |    |    \|- sse4.1 (stub modulefile for bar w gcc/9.1.0 and sse4.1)
 |  |  |    \|- foo
-|  |  |    |    \|- common (common code for foo)
+|  |  |    |    \|- common (common code for foo) (actually a symlink to a ``common`` subdirectory)
 |  |  |    |    \|- 2.4 (stub modulefile for foo w gcc/9.1.0 and nompi)
 |  |  |    \|- mvapich
-|  |  |    |    \|- common (common code for mvapich)
+|  |  |    |    \|- common (common code for mvapich) (actually a symlink to a ``common`` subdirectory)
 |  |  |    |    \|- 2.1 (stub modulefile for mvapich 2.1 w gcc/9.1.0)
 |  |  |    |    \|- 2.3.1 (stub modulefile for mvapich 2.3.1 w gcc/9.1.0)
 |  |  |    \|- openmpi
-|  |  |         \|- common (common code for openmpi)
-|  |  |         \|- 3.1 (stub modulefile for openmpi 3.1 w gcc/9.1.0)
-|  |  |         \|- 4.0 (stub modulefile for openmpi 4.0 w gcc/9.1.0)
+|  |  |    |    \|- common (common code for openmpi) (actually a symlink to a ``common`` subdirectory)
+|  |  |    |    \|- 3.1 (stub modulefile for openmpi 3.1 w gcc/9.1.0)
+|  |  |    |    \|- 4.0 (stub modulefile for openmpi 4.0 w gcc/9.1.0)
 |  \|- intel
 |  |  \|- 2018
 |  |  |    \|- ... modules depending on compiler=intel/2018
 |  |  \|- 2019
-|  |       \|- ... modules depending on compiler=intel/2019
+|  |  |    \|- ... modules depending on compiler=intel/2019
 |  \|- pgi
-|     \|- 18.4
-|     |    \|- ... modules depending on compiler=pgi/18.4
-|     \|- 19.4
-|          \|- ... modules depending on compiler=pgi/19.4
+|  |  \|- 18.4
+|  |  |    \|- ... modules depending on compiler=pgi/18.4
+|  |  \|- 19.4
+|  |  |    \|- ... modules depending on compiler=pgi/19.4
 
 For brevity, we only show the directory structure for the modules depending on 
 the two versions of gcc in detail; the other compilers will have similar
-structures.  The modulefile for openmpi for gcc/9.1.0 consists of:
+structures.   
+
+Basically, there is a separate modulepath for each compiler, containing only the
+modulefiles depending on that specific build of the compiler (and not also depending
+on something else, like MPI library).
+This certainly enforces the consistency of loaded modules; one could not load
+a specific version of gcc (say gcc/9.1.0) and an incompatible version of foo (e.g. foo/1.1),
+because all of the foo modulefiles are in compiler specific module trees and there is
+no foo/1.1 in the gcc/9.1.0 moduletree.  Conflict statements in the compiler modulefiles
+will prevent one from loading multiple compilers, thereby preventing multiple compiler
+specific modulepaths (unless the user explicitly does a ``module use`` or similar, and
+there is only so far one can go in preventing users from shooting themselves in the foot).
+
+The modulefiles for foo and bar are fairly straightforward; we have a common file which
+does the heavy lifting (and since this can be made independent of version and compiler, this
+is actually a symlink to a package specific common file in a ``common`` directory external 
+to the modulepath trees).
+We then add some small stubfiles which set variables for the specific build information, which
+mostly are determined by their position in the tree structure (e.g. the stubfiles under
+``Compiler/gcc/9.1.0`` are all going to set ``compilerTag`` to ``gcc/9.1.0``, etc), and
+then invoke the common file.
+
+The modulefiles for openmpi are largely similar.  E.g., for gcc/9.1.0 we have a small
+stubfile like the following (for version 4.0)
+
+.. include:: ../../example/compiler-etc-dependencies/modulepath/Compiler/gcc/9.1.0/openmpi/4.0
+    :literal:
+
+which defines the version and compilerTag variables for the OpenMPI version and
+compiler version, and then invokes the common script 
+
+.. include:: ../../example/compiler-etc-dependencies/modulepath/Compiler/gcc/9.1.0/openmpi/common
+    :literal:
+
+which does the usual stuff (define a help function, whatis string, and sets assorted environmental
+variables like PATH, LIBRARY_PATH, etc. for using OpenMPI), and then adds another directory
+to the ``MODULEPATH``.  This new directory, under ``CompilerMPI`` is for modulefiles which
+depend on the compiler AND the MPI library.  (It is assumed that all modulefiles depending on
+MPI libraries also depend on the compiler).  This new branch in the modulepath would have
+a structure like
+
+|  CompilerMPI
+|  \|- gcc
+|  |  \|- 8.2.0 
+|  |  |    \|- mvapich
+|  |  |    |    \|- 2.1
+|  |  |    |    |    \|- foo
+|  |  |    |    |    |   \|- 1.1 (stubfile for foo 2.1 with gcc/8.2.0 and mvapich/2.1)
+|  |  |    |    |    |   \|- common (common code for foo) (actually a symlink to a ``common`` subdirectory)
+|  |  |    \|- openmpi
+|  |  |    |    \|- 3.1
+|  |  |    |    |    \|- foo
+|  |  |    |    |    |   \|- 1.1 (stubfile for foo 2.1 with gcc/8.2.0 and openmpi/3.1)
+|  |  |    |    |    |   \|- common (common code for foo) (actually a symlink to a ``common`` subdirectory)
+|  |  \|- 9.1.0
+|  |  |    \|- mvapich
+|  |  |    |    \|- 2.3.1
+|  |  |    |    |    \|- ... modules depending on gcc/9.1.0 and mvapich/2.3.1
+|  |  |    \|- openmpi
+|  |  |    |    \|- 4.0
+|  |  |    |    |    \|- ... modules depending on gcc/9.1.0 and openmpi/4.0
+|  \|- intel
+|  |  \|- 2018
+|  |  |    \|- intelmpi
+|  |  |    |    \|- default
+|  |  |    |    |    \|- ... modules depending on intel/2018 and its included MPI library
+|  |  |    \|- mvapich
+|  |  |    |    \|- 2.1
+|  |  |    |    |    \|- ... modules depending on intel/2018 and mvapich/2.1
+|  |  |    \|- openmpi
+|  |  |    |    \|- 3.1
+|  |  |    |    |    \|- ... modules depending on intel/2018 and openmpi/3.1
+|  |  \|- 2019
+|  |  |    \|- intelmpi
+|  |  |    |    \|- default
+|  |  |    |    |    \|- ... modules depending on intel/2019 and its included MPI library
+|  |  |    \|- mvapich
+|  |  |    |    \|- 2.3.1
+|  |  |    |    |    \|- ... modules depending on intel/2019 and mvapich/2.3.1
+|  |  |    \|- openmpi
+|  |  |    |    \|- 4.0
+|  |  |    |    |    \|- ... modules depending on intel/2019 and openmpi/4.0
+|  \|- pgi
+|  |  \|- 18.4
+|  |  |    \|- mvapich
+|  |  |    |    \|- 2.1
+|  |  |    |    |    \|- ... modules depending on pgi/18.4 and mvapich/2.1
+|  |  |    \|- openmpi
+|  |  |    |    \|- 3.1
+|  |  |    |    |    \|- ... modules depending on pgi/18.4 and openmpi/3.1
+|  |  \|- 19.4
+|  |  |    \|- openmpi
+|  |  |    |    \|- 3.1
+|  |  |    |    |    \|- ... modules depending on pgi/19.4 and openmpi/3.1
+|  |  |    |    \|- 4.0
+|  |  |    |    |    \|- ... modules depending on pgi/19.4 and openmpi/3.1
+
+Basically, there is a separate modulepath for each combination of compiler and
+MPI library, listing all modulefiles depending on that compiler and MPI library.
+The modulefiles underneath each directory simply do what is needed to load that
+version of the package built with the specified compiler and MPI library.
+
+This process could be continued further, as needed.  E.g., if you had packages which
+depended on NetCDF, and you had multiple builds of NetCDF for a given compiler/MPI
+combination, you could add another modulepath tree, e.g. ``CompilerMPINetCDF``, 
+branching on each compiler, MPI, and NetCDF triplet.  But things can also get
+unwieldy if carried too far.  
+
+One could also add modulepath trees for disjoint features like SIMD level,
+but this turns out to be a bit tricky.  E.g., if you had a simd branch as well
+as a compiler branch, with both simd and compiler appearing in Core, things are
+fine for the Simd and Compiler trees.  However, if there were to be modules depending
+on both, e.g. a CompilerSimd branch, then because compiler and simd are disjoint
+and could be loaded in either order, the modulefiles for both would need to handle
+adding the CompilerSimd branch depending on whether the other was previously loaded.
+
+Examples
+--------
+
+We now look at the example usage for the modulepath based strategy.  
+To use these examples, you must:
+
+#. Set (and export) MOD_GIT_ROOTDIR to where you git-cloned the modules source
+#. Do a ``module purge`` 
+#. Set your MODULEPATH to ``$MOD_GIT_ROOTDIR/doc/example/compiler-etc-dependencies/modulepath/Core``
+
+Note that we set the MODULEPATH to the Core subdirectory; the Core branch is for those modulefiles
+that do not depend on compiler or MPI library, and that should be available from the start.
+
+As with the previous cases, we start with a ``module avail`` command, and here 
+we see the first big difference:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/modavail.out
+    :literal:
+
+When we first do a ``module avail``, we only see the modulefiles for the compilers.  
+The MPI libraries, foo, bar, etc. all depend on at least the compiler, and so 
+will not become "available" until a compiler (and possibly MPI library as well) is loaded.
+In a production environment there would likely be other modulefiles available in Core
+(i.e. an application which is only used as a standalone application and does not 
+provide an API/libraries to link against would likely be placed in Core), but in our 
+simple example, only the compilers appear in Core.  As we load a compiler and then an 
+MPI library, additional modulefiles appear available.  In a production environment, one
+might wish to set things up so that a compiler (and maybe MPI library) modulefile is
+automatically loaded when the user logs in.
+
+The downside of this is that it becomes difficult for an user to know what software
+is available, at least via the module command.  I.e., if application foobar is only built
+for a single compiler/MPI combination, it will not show up in module avail unless that 
+specific compiler/MPI combination were previously loaded.  Lmod adds a ``module spider``
+command which allows the user to list all packages installed for any compiler/MPI
+combination, and can be used to also find out which compiler/MPI combinations are needed
+to access a specific modulefile, but Environmental Modules does not have a comparable function
+at this time.  If you were to use this strategy in a production environment, you would
+likely need to generate lists of available packages (and their compiler/MPI/etc dependencies)
+in a web page or other documentation area which can be frequently updated.
+
+The standard functionality of selecting the correct build of a package
+based on the loaded compiler, e.g.
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/ompi-loads1.out
+    :literal:
+
+works as expected.  As shown in the last command above, when requesting a module not
+built for the loaded compiler (e.g. openmpi/4.0 when gcc/8.2.0 is loaded), the module command
+simply returns ``Unable to locate a modulefile`` as there is no corresponding modulefile
+in the current list of MODULEPATHS.
+
+The functionality of the ``module switch`` command depends on version and/or settings
+of Environmental Modules.  For version 3.x, or 4.x with the automatic module handling
+feature disabled, it does not work well, modules which depend on the switched out module
+are not reloaded, leading to inconsistent environments.  But for 4.x versions with
+the automatic module handling feature enabled (as indicated by the --auto after the
+switch, although that can be made the default), it works as expected.  Modules depending
+on the module being switched out get unloaded and reloaded if possible, as shown below:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/ompi-switch.out
+    :literal:
+
+The modulefiles themselves basically have no support for defaulting a compiler;  the modulefiles for 
+the various MPI libraries are simply not even available until a modulefile for a compiler is loaded, as
+seen below:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/ompi-defaults.out
+    :literal:
+
+However, this could be somewhat mitigated by having the modulefile for the default compiler automatically
+loaded for the user upon login (e.g. in their dot files).
+
+The situation is similar for foo:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/foo-loads.out
+    :literal:
+
+As expected, the correct version of foo is loaded depending on the previously
+loaded compiler and MPI libraries.  Here again we use an ``intelmpi`` modulefile
+to indicate when we wish to use Intel MPI libraries, even though they are enabled
+by the ``intel`` module.  The ``intelmpi`` modulefile basically just adds the modulepath
+for the intel-compiler and intelmpi dependent modules.
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/foo-switch.out
+    :literal:
+
+Note again the same deficiency in the switch report as the Homebrewed-flavours 
+strategy had; in the last case above wherein we loaded foo with intel/2019 loaded
+but no MPI module.  As expected, a non-MPI build of foo was loaded.  However, when an
+openmpi module is subsequently loaded, foo does not get reloaded and we still have
+the non-MPI build of foo, as evidenced by the output of the foo command.  And that
+this fact is not obvious from the module list output.
+
+The behavior when defaulting is nicer.  Without any compiler or MPI libraries
+Here we note a deficiency in the switch support as compared to ``Flavours``.  In the last example
+after loading intel/2019 and foo, we have the non-MPI build of foo as expected.  However, upon
+subsequently loading the openmpi module, we still have the non-MPI version of foo loaded, as evidenced
+by the output of the fake foo command.  I.e., the foo package was *not* automatically reloaded, as 
+there was no prereq in the foo modulefile on an MPI library (as in the non-MPI build there is no MPI
+library to prereq).  Also note that module list does not really inform one of this fact.
+
+The ability to default partial modulenames in this strategy is mixed.  Without any compiler loaded,
+most modulefiles are not even visible/available.  However, once a compiler is loaded, trying to 
+load a module without specifying the version will end up loading the latest version compatible
+with the loaded compiler (as no incompatible versions are visible) as seen below:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/foo-defaults.out
+    :literal:
+
+This is better than in the Flavours or Homebrewed-flavors strategies.  If one were to use
+this strategy in production, I would recommend having a default compiler module (and maybe even
+an MPI library, etc) automatically loaded when the user logs in, thereby allowing for a reasonable defaulting
+ability (and more reasonable module avail output).
+
+The situation with bar is similar.  We do not have a dummy simd module,
+so the builds with different CPU vectorization support are specified by
+appending /avx, etc. to the bar package name.  As with previous strategies,
+if one attempts to load a simd variant which was not built for the compiler
+loaded, an error will occur.
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/bar-loads.out
+    :literal:
+
+Defaulting is handled well, as shown
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/bar-defaults.out
+    :literal:
+
+In particular, one case specify bar/avx2 or bar/avx or bar/sse4.1 and the
+latest version of bar consistent with the specification and any previously
+loaded compiler (or default compiler) will be loaded
+
+Summary of modulepath strategy
+------------------------------
+
+* It is quite difficult for an user to get an inconsistent environment,
+  at least when automatic module handling is used.  The modulepaths are
+  managed so that only modulefiles consistent with the previously loaded
+  compiler/MPI library are visible.
+* With automatic module handling, the module switch command is very nicely
+  supported.
+* The module command does not lend itself to readily seeing all the packages
+  which are installed on the system, nor seeing for which compiler/MPI combinations
+  a certain package is built.  The module avail command just does not show
+  any modules not compatible with the currently loaded compiler and/or MPI
+  libraries.  Lmod needed to add a ``module spider`` command to address this,
+  but no such functionality currently exists in Environmental Modules.
+  If one were to use this in production, you would need to provide something
+  similar to the Lmod spider subcommand, or at least provide frequently 
+  updated web pages or similar with this information.
+* This strategy involves the use of many more modulepaths than the
+  previously examined strategies, having at least one modulepath per
+  compiler installed, and typically also one for each compiler/MPI library
+  combination.  If you add additional layers of dependency, things get even
+  more complicated, which can be limiting.  It is especially problematic if
+  you have two disjoint dependencies -- i.e. neither dependencies is dependent on
+  the other; in this case you might load one or the other, or both (in either
+  order).  If there are modulefiles dependent on both of these dependencies, the
+  last one loaded (and _only_ the last one) needs to handle adding the appropriate 
+  modulepath for the modulefiles depending on both.
+* In general, a module will fail to load with an error message 
+  if any dependent module is not already loaded.  The error will actually
+  state that the module cannot be found, as the modulepath containing it will
+  not be added to the MODULEPATH until the modules depended on are loaded.
+  So if you need to default a compiler, etc., you will need to have the 
+  user's initialization scripts automatically load the appropriate
+  modulefile upon login.
+* However, what we have been referring to as "more intelligent defaulting" is
+  effectively supported.  I.e., if a user requests to load a package without
+  specifying the version desired, the version will be defaulted to the latest
+  version _compatible_ with the currently loaded compiler and other depencies.
+  This is because the incompatible versions are not visible in the module tree.
+  has loaded.
+
+
+.. _Comparison of Strategies:
+
+------------------------
+Comparison of Strategies
+------------------------
+
+All of the strategies discussed above have their peculiar strengths and weaknesses.
+The decision of which strategy to use will depend on how these strengths and weaknesses
+impact your design goals.  I would advise playing around in the sandbox environments
+a bit, as actual use tends to help make clear which downsides you are willing to accept
+and which you are not.  
+
+With the exception of the Flavours strategy, which works best with Environmental Modules
+version 3.x, all of the other strategies work as well or better
+on the newer 4.x versions of Environmental Modules.  This difference is most visible
+in the discussion of features around the module switch command.  So in the following
+discussions we will assume Environmental Modules version 3.x for the Flavours strategies,
+as that is the version it works best with.  For all other strategies, we assume
+Environmental Modules version 4.x, with automatic module handling enabled, as these
+strategies work best in that scenario.
+
+The Homebrewed-flavors, Modulerc-based, and Modulepath-based strategies all 
+require a significant amount of "assembly" in order to get them working for a
+production environment; the example scripts and procedures provided here should
+hep significantly, but should not be construed as a polished product.  You will
+likely need to customize and extend for your environment.  The
+Flavours strategy, on the other hand, has been packaged to present as a finished product
+and so requires less "assembly" to get working, but does not appear to be actively
+maintained, so the reduced up-front work might be neutralized by the costs of 
+self support.
+
+Basic Dependency Handling
+-------------------------
+
+All of the strategies discussed support a basic level of dependency
+handling.  If a user attempts to load a package, they get the build of the
+package appropriate for the previously loaded compiler or other dependencies,
+or, if no appropriate build is found, an error message indicating such.
+E.g, if the user does::
+
+  module load gcc/8.2.0
+  module load foo/1.1
+
+their environment will be set up to run foo version 1.1 built
+with gcc version 8.2.0.
+
+All of the strategies discussed meet this criterion, with both 3.x and 4.x versions
+of Environmental Modules.
+
+Advanced Dependency Handling (e.g. the module switch subcommand)
+----------------------------------------------------------------
+
+Things are more complicated when we allow for the modules upon which
+other loaded modules might depend to be changed.  This generally involves
+the module switch command.  
+
+While all of the strategies handle well the easy case, when we switch
+a module upon which no other loaded modules depend, the trick comes
+when one or more currently loaded modules depend on the module being
+switched out.  E.g., if we assume that module foo depends on the
+previously loaded compiler, then ideally, we would like for a sequence like::
+
+   module load intel/2019
+   module load foo
+   module switch intel pgi/18.4
+
+to have the same effective outcome as if the user issued the commands::
+
+   module load pgi/18.4
+   module load foo
+
+I.e., switching out the compiler
+will cause foo to be reloaded with the new compiler dependency.  And ideally
+in this example we would have pgi/18.4 loaded along with the latest version
+of foo compatible with that compiler.
+
+This is handled reasonably well with the Flavours (using Environmental Modules
+3.x) and the Homebrewed-flavors and Modulepath-based (both using Environmental
+Modules 4.x) strategies.  For the Homebrewed-flavors and Modulepath-based
+strategies, this relies on the automatic module handling feature (As of
+version 4.3.1, this is disabled by default.  It can be enabled in ``modulecmd.tcl``, 
+or by setting the environmental variable MODULES_AUTO_HANDLING to 1, or by adding the ``--auto`` flag
+to the modules command.)
+
+For these strategies, swapping out a compiler or other module upon which a loaded
+module depends will cause the the module with a dependency to be unloaded, the
+module being switched being swapped out, and the module that had a dependency being
+reloaded. 
+
+Our example sequence above actually exposes a subtle issue.  For the Flavours
+and Homebrewed-flavors strategies, the sequence of loading pgi/18.4 followed
+by foo (using our example software library) would fail, as foo would be defaulted to 
+version 2.4 and as there was no build of foo/2.4 for pgi/18.4, the module load foo
+would fail.  And indeed, the switch sequence above would not be completely successful
+under either strategy: for the Homebrewed-flavors strategy, the compiler would be
+swapped out and the reload of foo would fail with an error (so effectively
+equivalent to the second sequence).  For the Flavours strategy, it detects that
+it would be unable to reload foo, and the switch command fails (i.e. the compiler
+remains intel/2019).
+
+For the modulepath strategy, the second sequence (loading pgi/18.4 then foo) would
+actually work, as the modulepath exposed by loading pgi/18.4 only has versions of
+foo that are compatible with pgi/18.4.  But the switch command does not work
+as well as would be desired.  This is because that as currently implemented, when the
+automatic module handling code does the reload of the module that was unloaded
+due to dependencis, it attempts to reload based on the fully qualified name of the
+module that was loaded, and not based on the (possibly partial) name specified
+when the module was originally loaded.  So, after the module load intel/2019,
+the module load foo will result in foo/2.4 being loaded.  When we switch out intel/2019
+for pgi/18.4, foo gets unloaded, but after the compiler swap, it tries to reload
+foo/2.4.  As there is no build of foo/2.4 for pgi/18.4 (and thus no modulefile in
+the current modulepath), the module is not found and is unable to be loaded.
+As in the Homebrewed-flavors case, the compiler is switched but foo is left unloaded
+(with an appropriate warning to that effect).
+
+This same issue prevents the automatic module handling feature as currently implemented
+from being very useful with the Modulerc-based.  Basically, whenever you have a module
+loaded that depends on another module, switching out the module depended upon will
+fail to reload the other module.  This is true even in less pathological cases, like::
+
+   module load intel/2019
+   module load foo
+   module switch intel pgi/19.4
+
+which succeeds under the other three strategies (as foo/2.4 _is_ built for pgi/19.4).  
+This is because when foo is initially loaded in the above scenario, the actual modulename 
+loaded is foo/intel/2019/2.4.  With the switch command, foo gets unloaded, the compilers
+are switched, and the automatic modules handling code tries to reload foo/intel/2019/2.4.
+That modulename clearly depends on intel/2019, not pgi/19.4, and so will fail to load
+(with an error message).  The net result is that the compiler gets switched, but any
+modules depending on the compiler (or whatever module being switched) get unloaded
+(with a warning to that effect).  It is hoped that a future version of the
+automatic modules handling feature will have an option to reload the dependent
+modules using the modulename they were loaded with; this should allow for the
+switch command to work well in the Modulerc-based strategy, as well as make 
+edges case (like the pgi/18.4 example discussed above) work better with the Modulepath-based
+strategy.
+
+There is another edge case which only the Flavours strategy handles well.  Consider a
+scenario like::
+
+   module purge
+   module load intel/2019
+   module load foo 
+   foo # this should be  foo/2.4 built for intel/2019 without MPI
+   module load openmpi
+   foo # What build is this, with or without MPI?
+
+With the Flavours strategy, the final foo will be built for intel/2019
+with openmpi support; i.e. Flavours supports the concept of _optional_ prerequisites, and foo has
+an optional prequisite on the MPI libraries, so when openmpi is loaded, any previously loaded modules
+which depend on it (through a regular or optional prerequisite) get reloaded.
+
+All of the other strategies rely on automatic module handling for automatic reloads, and
+in this case no reload of foo will be initiated as foo does not have 
+MPI libraries listed as a prerequisite (otherwise a no MPI version could not be loaded).  This is especially
+problematic for the Homebrewed flavors and Modulepath-based strategies, since it is not easily to
+tell from a module list or similar command which version of foo the environment is set for (for the
+Modulerc-based strategy, the full modulename from module list will indicate that).
+
+However, despite some potential issues with some edge cases, the Flavours, Homebrewed-flavors, and
+Modulepath-based strategies all handle this challenge well.  The Modulerc-based
+approach has a poor showing (although at least the modules depending on the module switched
+out will be unloaded, so the set of loaded modules is consistent).
+
+Note also that this topic shows the most dependence on the version of Environmental
+Modules.  For the Flavours strategies, I could not get the switching of a module upon which
+other modules depended to work (the wrapper script returned weird errors).  The
+other strategies all rely on the automatic module handling feature to enable the unload
+and reload of modules which depend on the module being switched out.  Thus for 3.x versions
+of Environmental Modules (or even 4.x versions w/out automatic module handling enabled),
+the switch of a compiler, etc. will only result in the compiler being replaced, and any
+modules which depend on the compiler will not be reloaded.  This means they will still be
+pointing to versions built for the old compiler, leading to an inconsistent set of
+modules being loaded.  This is particularly bad in the Homebrewed-flavors case, as a module
+load will not even inform one of that fact.
+
+
+Visibility into what packages are available
+-------------------------------------------
+
+Another set of criteria to weigh has to do with visibility into the available
+packages.  We are interested in 
+
+#. Viewing all of the packages installed on a system
+#. Determining what versions of a specific package are available for a 
+   given compiler/MPI/etc combination.
+#. Seeing what compiler/MPI/etc combinations a specific version of a
+   package 
+#. For packages that we have currently loaded, determining which compiler/MPI/etc
+   they were built for.
+
+In terms of seeing all of packages that are available, the Flavours and Homebrewed flavors strategies
+are probably the best.  The ``module avail`` command will list all modulefiles available, which will
+typically just be a list of packagename/version for each installed version.  On a production system
+with many packages installed, even this can be a bit overwhelming to the user.
+
+The ``module avail`` command will also list all modulefiles for every installed package in the Modulerc-based
+strategy, but here every build of every version of every package will have a distinct modulefile.  I.e.,
+you will not just have foo/1.1 and foo/2.4 listings, but foo/1.1/gcc/8.2.0/nompi, foo/1.1/gcc/8.2.0/mvapich/2.1,
+foo/1.1/gcc/8.2.0/openmpi/3.1, foo/1.1/intel/2018/nompi, foo/1.1/intel/2018/intelmpi, etc. modulefiles.
+Actually, the situation is even worse than that, as in this strategy there are often multiple
+modulefiles for the same build in order to ease navigation of the module tree, e.g. we could have 
+foo/1.1/gcc/8.2.0/nompi and foo/gcc/8.2.0/nompi/1.1 representing the same build of the same package.  
+Whereas an unqualified ``module avail`` in the Flavours or Homebrewed flavors strategies can be a bit overwhelming 
+in a large environment, with the Modulerc-based strategy it can become practically unusable.
+
+While an unqualified ``module avail`` in the Flavours, Homebrewed flavors, and especially Modulerc-based strategies
+can inundate the user with modulenames, the Modulepath-based strategy has the opposite problem.  With the Modulepath-based
+strategy, the modulefiles are split across multiple, often multually incompatible, modulepaths, so the module avail
+command will never return a list of all modulefiles installed, only those available given the previously loaded
+compiler/MPI libraries/etc.  E.g., if a package foobar is only installed for a particular compiler/MPI combination,
+it will not appear in any module avail listing unless that particular compiler and MPI were previously loaded.
+
+While the number of modulefiles listed in an unqualified ``module avail`` command in the Modulerc-based strategy
+is unwieldy, if one adds a partial package specification argument, the number of modulefiles returned is greatly
+reduced.  This smaller list can provide information about which compilers/MPI/etc. are compatible with
+a specific version of a package.  For example, to see the compilers for which foo/2.4 is built, we can
+do something like:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-avail1.out
+    :literal:
+
+Similary, to see the builds of foo using gcc compilers, one can do something like:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulerc/modules4.3.1/foo-avail2.out
+    :literal:
+
+The other strategies do not readily provide that information.  The next best case is the Modulepath-based
+strategies, because here at least a module avail will tell you what versions of a package are compatible
+with the currently loaded compiler/MPI/etc, e.g.:
+
+.. include:: ../../example/compiler-etc-dependencies/example-sessions/modulepath/modules4.3.1/foo-avail1.out
+    :literal:
+
+But the Flavours and Homebrewed-flavors strategies do not readily show what versions of packages are built
+for which compilers, etc.  You would need to load a compiler/MPI/etc combination, and then try loading
+a particular version of a package.
+
+Lastly, with the Modulerc-based strategy, the module list command explicitly shows information
+about the compiler/MPI/etc used to build the loaded modules, as that is part of the full modulename.
+This information is not explicitly visible in the other three strategies, but that is usually not
+a problem.  As long as the various user commands result in a set of modules wherein every module depending
+on either a compiler or MPI library, etc. is built for the currently loaded compiler/MPI library/etc., 
+that information is redundant.  
+
+The only cases where this is potentially an issue are the sort of edge cases described in the previous
+section, e.g. if one were to do something like::
+
+   module purge
+   module load intel/2019
+   module load foo 
+   foo # this should be  foo/2.4 built for intel/2019 without MPI
+   module load openmpi
+   foo # What build is this, with or without MPI?
+
+In the above example, for the Flavours, Homebrewed-flavors, and Modulepath-based strategies a
+module list at the end would simply list something like::
+
+  Currently Loaded Modulefiles:
+  1) intel/2019   2) foo/2.4   3) openmpi/4.0
+
+For the Flavours strategy, foo would be built with MPI support, but for the other
+two, foo would still be the non-MPI build, which is not readily apparent from the
+above output (although possibly could be inferred by the ordering of the modules).
+
+
+Ease of Navigating the Module Tree
+----------------------------------
+
+The final criterion to be discussed is the ease of navigating the module tree.
+Ideally, we would like it so that when an user gives a partial modulename the
+system resolves in a sensible manner.  Typically a partial modulename will be
+a package name without a version, in which case ideally the latest version of
+the package (compatible with previously loaded compiler, etc), should be loaded.
+And indeed, for a simple case like::
+
+   module purge
+   module load intel
+   module load foo
+
+all the strategies do just that.  The intel module will default to intel/2019,
+and foo to version 2.4 built for intel/2019.  However, with even a slight modification
+things begin to diverge, e.g.::
+
+   module purge
+   module load intel/2018
+   module load foo
+
+In this second case, the Flavours and Homebrewed-flavors strategies still default
+the version of foo to version 2.4, despite there being no build of foo/2.4 for intel/2018.
+That is because they do not do intelligent defaulting, and will simply default 
+the version of foo to the highest version they see
+even though it is not compatible with the loaded compiler.
+Thus the load of foo will fail for Flavours and Homebrewed-flavors strategies.
+However, for the Modulerc-based and Modulepath-based strategies, the module load of foo
+will successfully load foo version 1.1 built for intel/2018.  For the Modulepath-based
+strategy, this is because the only foo modules currently visible are compatible with the
+loaded intel/2018 compiler, and it simply defaults to the highest version seen.  For
+the Modulerc-based strategy, the .modulerc file directly under foo directs it down the
+subdirectory for the intel compiler family, which has a .modulerc defaulting to the 2018 subdirectory
+(as the currently loaded compiler version), which has a .modulerc defaulting to the nompi
+subdirectory (the MPI family as no MPI library was loaded).  At this point, there is not
+another .modulerc file, so the latest version will be defaulted to, and 
+foo/intel/2018/nompi/1.1 module will be loaded.
+
+The situation is analogous when there are chained dependencies (e.g. compiler and MPI
+libraries); the Flavours and Homebrewed-flavors strategies will default to the latest
+version of the package they know about, regardless of whether it is compatible with the
+loaded environment.  If it is compatible, it will be loaded and all is well, if not the
+load command will fail with an error message.  Not horrible; the set of loaded modules is
+still consistent, but not terribly user-friendly either.
+
+For the Modulerc-based and Modulepath-based strategies, the latest build compatible with
+the various dependencies will be loaded (or if no build is compatible, the load will fail
+with an appropriate error).  
+
+For the Flavours, Homebrewed-flavors, and Modulepath-based strategies, typically modulenames
+only consist of the package name and version components, so generally only partial modulenames
+seen are packages without a version.  The Modulerc-based strategy has much longer modulenames, 
+and therefore a greater variety of partial modulenames, which can allow for interesting
+possibilities.  For example, one could do ``module load foo/pgi``, which (assuming no compiler
+was previously loaded), would load the latest version of foo built with the latest version of 
+the pgi cmopiler.  The module command will start looking for a modulefile in the
+foo/pgi subdirectory of the foo module structure,
+where the .modulerc file will attempt to default to the version of pgi which was loaded, but as 
+no compiler was loaded, the modulerc file will terminate without setting a default, and the
+modulecmd will default to the latest version, and descend into that directory (19.4).  Here,
+the .modulerc will attempt to default to the MPI family, but since none is loaded (as that
+would require a compiler to have been loaded), it defaults to the nompi directory, and then
+to the latest version in the nompi subdirectory.  So the module foo/pgi/19.4/nompi/2.4 will
+get loaded, which will also cause pgi/19.4 to get loaded.  Should we have issued that module
+load after having loaded a non-pgi compiler, the same module file would get loaded, but it
+would detect an incompatible previously loaded compiler and abort with an error.  Should a
+pgi compiler have been previously loaded, we would have gotten the latest version of foo built
+for that compiler (and possibly with any previously loaded MPI library).
+
+The above is supported because we create a PACKAGE/COMPILER_FAMILY/COMPILER_VERSION/.../PKGVERSION
+tree in the package's modulefile directory for packages depending on the compiler.  Possibly
+with additional components to the modulename for MPI libraries, etc.  These are created
+to allow for the more basic ``module load foo`` case, but because the module path is
+descended component by component, it works if you jump in in the middle as well
+(and will fail if you try something stupid like ::
+
+   module load intel/2019
+   module load foo/pgi
+
+But a more interesting case is when there are somewhat disjoint options on the builds.
+Consider the case of the bar package from the examples, which in addition to the compiler
+and builds supporting different SIMD levels.  For the Flavours and Homebrewed-flavors
+strategies, we handled this with a pseudo-simd package and modules.  This worked, and allowed
+for one to select a build that matched both compiler and SIMD level, but you likely need to
+manually select a bar version compatible with both of these, as these strategies will not
+do intelligent defaulting of versions.  
+
+For the Modulepath-based strategy, we added the SIMD label as a final component to the
+modulename, but the defaulting was somewhat simple (e.g. alway default to lowest SIMD).
+
+With the Modulerc-based strategy, we added an additional naming scheme for the bar modulefiles,
+so they can start with bar/BARVERSION, or bar/COMPILER_FAMILY, or bar/SIMD_LEVEL.  This not
+only makes it easier to view which versions of bar for which compilers are built with support
+for a given SIMD level (e.g. module avail bar/avx2), but also one can do something like::
+
+  module load pgi/19.4
+  module load bar/avx
+
+to load the latest version of bar built for pgi/19.4 with AVX support.  While there is
+overhead associated with adding a new naming scheme like that (you add another set of
+modulefiles to bar and a new subdirectory tree), this can be done on a per package
+basis and when done judiciously it can be convenient for the users.
+
+-----------
+Conclusions
+-----------
+
+We have presented four strategies for dealing with modulefiles for packages
+with multiple builds depending on compiler, MPI, and/or other factors.  All
+four strategies can deal with the basic requirement of loading of the correct build 
+of a package depending on the previously loaded dependencies, or failing with
+a reasonable error message if no such build is available.  They all have their
+own strengths and weaknesses beyond that, which I have tried to present objectively.
+I hope this might be of use when you evaluate how to handle this issue at your
+site.
+
+
+   
 
 
 
-LEFT OFF HERE
-Whereas the ``homebrewed flavors`` strategy had the modulefile invoke
-a Tcl procedure to determine which, if any, version of a module like a compiler
-was loaded and then adjust paths, the ``modulerc-based`` strategy instead
-uses the same Tcl procedures to default the modulefile which will be loaded.
-This implies that there is a distinct modulefile for every build of the package,
-and an immediate consequence is that this strategy has many more modulefiles
-than the others.  We make use of the techniques in the cookbook 
-``Tips for Code Reuse`` to reduce the total amount of code; the actual modulefiles
+
+
 

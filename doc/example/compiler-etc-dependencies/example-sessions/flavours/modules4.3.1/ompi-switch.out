@@ -1,6 +1,6 @@
 mod4.3.1-flavours> module purge
 mod4.3.1-flavours> module load pgi/19.4
-mod4.3.1-flavours> module load openmpi/4.0
+mod4.3.1-flavours> module load openmpi
 mod4.3.1-flavours> module list
 Currently Loaded Modulefiles:
  1) pgi/19.4   2) openmpi/4.0  

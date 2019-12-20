@@ -17,6 +17,6 @@ do_cmd module load intel/2019
 do_cmd module load foo
 do_cmd module list
 do_cmd foo
-do_cmd module load openmpi
+do_cmd module load $AUTOFLAG openmpi
 do_cmd module list
 do_cmd foo

@@ -1,9 +1,9 @@
 mod4.3.1 (modulerc)> module purge
 mod4.3.1 (modulerc)> module load pgi/19.4
-mod4.3.1 (modulerc)> module load openmpi/4.0
+mod4.3.1 (modulerc)> module load openmpi
 mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
- 1) pgi/19.4   2) openmpi/4.0/pgi/19.4(default)  
+ 1) pgi/19.4   2) openmpi/pgi/19.4/4.0  
 mod4.3.1 (modulerc)> mpirun
 This is fake mpirun (openmpi/4.0, pgi/19.4)
 mod4.3.1 (modulerc)> module switch --auto pgi intel/2019
@@ -13,19 +13,19 @@ mod4.3.1 (modulerc)> module switch --auto pgi intel/2019
 
 Compiler Mismatch
 
-Package openmpi/4.0/pgi/19.4 does not appear to be built for currently
+Package openmpi/pgi/19.4/4.0 does not appear to be built for currently
 loaded compiler intel/2019.
 
 
 
 
 
-Loading openmpi/4.0/pgi/19.4
+Loading openmpi/pgi/19.4/4.0
   ERROR: Module evaluation aborted
 
 Switching from pgi/19.4 to intel/2019
-  WARNING: Reload of dependent openmpi/4.0/pgi/19.4 failed
-  Unloading dependent: openmpi/4.0/pgi/19.4
+  WARNING: Reload of dependent openmpi/pgi/19.4/4.0 failed
+  Unloading dependent: openmpi/pgi/19.4/4.0
 mod4.3.1 (modulerc)> module list
 Currently Loaded Modulefiles:
  1) intel/2019  

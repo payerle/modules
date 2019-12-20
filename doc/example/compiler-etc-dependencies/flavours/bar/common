@@ -13,6 +13,7 @@ package require flavours
 flavours init
 
 proc ModulesHelp { } {
+   global version
    puts stderr "
 bar: Test/fake version of bar $version
 

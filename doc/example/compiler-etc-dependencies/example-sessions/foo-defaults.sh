@@ -31,10 +31,12 @@ fi
 do_cmd module purge
 case $TMP_STRATEGY in
    modulepath)
-	do_cmd module load foo
 	do_cmd module load $GCCGNU/8.2.0
-	do_cmd module load foo/2.4
+	do_cmd module load openmpi
+	do_cmd module load foo
 	do_cmd module list
+	do_cmd foo
+	do_cmd module purge
 	;;
 esac
 do_cmd module load foo/1.1

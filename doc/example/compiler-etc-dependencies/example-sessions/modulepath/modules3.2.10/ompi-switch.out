@@ -1,6 +1,6 @@
 mod3.2.10 (modulepath)> module purge
 mod3.2.10 (modulepath)> module load pgi/19.4
-mod3.2.10 (modulepath)> module load openmpi/4.0
+mod3.2.10 (modulepath)> module load openmpi
 mod3.2.10 (modulepath)> module list
 Currently Loaded Modulefiles:
   1) pgi/19.4      2) openmpi/4.0
