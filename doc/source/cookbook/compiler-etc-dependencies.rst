@@ -104,7 +104,7 @@ The software in the example software library consists of:
   * GNU compiler versions 8.2.0 and 9.1.0
   * Intel Parallel Studio suite, versions 2018 and 2019. 
 
-    + We assume this includes Intel compilers, Intel MPI, and MKL, and that loading the ``intel`` module
+    + We assume this includes Intel compilers, Intel MPI, and MKL, and that loading the intel module
       will setup the environment for all of the above.
 
   * PGI compiler suite versions 18.4 and 19.4
@@ -238,7 +238,7 @@ get a better feel for things.
 Because we use some modulefile names (e.g. gcc, intel, pgi, openmpi, etc) 
 that likely are present on your system as well, it is recommended
 that if you wish to explore the playground environment that you
-spawn a new shell, do a ``module purge``, and then set your ``MODULEPATH``
+spawn a new shell, do a "module purge", and then set your ``MODULEPATH``
 environmental variable appropriately for the specific strategy.
 
 The Flavours strategy, as will be discussed, requires some modifications
@@ -270,9 +270,9 @@ start of the Examples section for each strategy.
 Flavours Strategy
 -----------------
 
-The ``Flavours`` strategy uses the ``Flavours`` extension to Tcl Environmental
+The Flavours strategy uses the Flavours extension to Tcl Environmental
 Modules from Mark Dixon at the University of Leeds.  The code is available
-via git, etc. from https://sourceforge.net/projects/flavours.  Unlike the
+via git, etc. from ``https://sourceforge.net/projects/flavours``.  Unlike the
 other strategies discussed, this requires the separate download and installation
 of an extension to Environmental Modules.
 
